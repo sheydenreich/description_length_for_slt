@@ -9,7 +9,7 @@ pill "Bayes λ". Sources are named on each figure slide.
 `slt_days_talk_7min.pptx` (2026-10-25): the 7-minute version, built by `scripts/build_deck_7min.js` from
 `presentation_comments.md` (repo root): a cold-open question, the title, then causal abstraction (a drawn IOI
 interchange diagram), description length and the gain decomposition, IIA vs code, the complexity ladder, fit or
-Occam (`gain_decomposition_as_is.png`), κ vs λ (`kappa_lambda_panels.png`) and a closing slide; 9 main slides with
+Occam (`gain_decomposition_slide.png`), κ vs λ (`kappa_lambda_panels.png`) and a closing slide; 9 main slides with
 references bottom right and speaker notes, then a backup section of 16 slides whose text is taken over from the
 long deck. Contact details on slides 2 and 9 are placeholders ("[email]", "[website]", the dashed box for a QR
 code or link).
@@ -51,7 +51,8 @@ text-table parsers (each parser names its source file).
   loss difference (≈ n·Δℓ) and the regret difference (Δκ ln n + O(1)), 32768 targets, 3 seeds; and the per-block
   code rate above the channel floor. Against the manufactured alignment the fit term is negative and the whole
   margin is regret. Source: `stage1_ioi/gain_decomposition_gpt2_n32768.json` (reading in the `.txt` next to it).
-  `gain_decomposition_as_is.*` (2026-10-25) is the top row alone (readout as is), for the 7-minute deck.
+  `gain_decomposition_slide.*` (2026-10-25, for the 7-minute deck): readout as is, the valid subspace against the
+  manufactured alignment and against the trained coupling, and the same-family coupling pair, side by side.
 - `kappa_lambda_panels.*` (fig_kappa_lambda_panels.py, 2026-10-25): `kappa_vs_dv`, `predicted_vs_measured` and both
   panels of `gpt2_fisher_vs_hessian_slide` as one 2 × 2 figure drawn at the size of its slide slot (compact
   labels; each panel is drawn by its own script's `panel`/`panels` function, so numbers and sources are unchanged).
