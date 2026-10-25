@@ -1,0 +1,55 @@
+  (columns: k; tangent directions with h > 1e-4 of the max; Laplace count (1/2) sum n h/(n h + 1) averaged over n = 256..2048,
+   superseded, see the correction below; plug-in prediction (1/2) tr(F H^+); measured MAP slope; measured Bayes slope at n <= 2048.
+   Asymptotic Bayes lambda = k/2 + (11-k)/4 = 3.0, 3.25, 3.75, 4.5, 5.5 for k = 1, 2, 4, 7, 11.)
+  k curved dirs (h>1e-4 max) pred Bayes slope n=256..2048 pred plug-in (1/2)tr(F H+)  measured MAP  measured Bayes
+  1                       11                         1.33                       1.10          0.53            1.98
+     eigenvalues h of the Hessian (tangent space): [8.9122e-01 6.3722e-02 8.9348e-05 8.9348e-05 8.9348e-05 8.9348e-05 8.9348e-05 8.9348e-05 8.9348e-05 8.9348e-05 8.9348e-05]
+     Fisher in the same directions F_ii           : [1.0639e+00 6.4017e-02 1.7468e-16 1.6098e-16 5.1827e-17 1.5114e-16 6.8795e-17 2.0253e-17 2.9045e-17 9.7359e-17 1.2540e-16]
+     F_ii / h_i                                    : [1.194e+00 1.005e+00 1.955e-12 1.802e-12 5.801e-13 1.692e-12 7.700e-13 2.267e-13 3.251e-13 1.090e-12 1.403e-12]
+  2                       11                         4.29                       1.08          1.46            2.88
+     eigenvalues h of the Hessian (tangent space): [0.91   0.8167 0.0043 0.0043 0.0043 0.0043 0.0043 0.0043 0.0043 0.0043 0.0043]
+     Fisher in the same directions F_ii           : [9.6481e-01 9.0339e-01 2.1427e-06 9.7769e-17 7.7017e-17 9.5741e-17 1.4827e-16 3.5904e-17 6.1485e-17 9.2349e-17 4.9926e-17]
+     F_ii / h_i                                    : [1.060e+00 1.106e+00 4.950e-04 2.260e-14 1.780e-14 2.213e-14 3.427e-14 8.298e-15 1.421e-14 2.134e-14 1.154e-14]
+  4                       11                         3.29                       2.41          1.94            3.16
+     eigenvalues h of the Hessian (tangent space): [1.0321e+00 9.3826e-01 8.9655e-01 8.1931e-01 1.5178e-01 4.3421e-04 4.3421e-04 4.3421e-04 4.3421e-04 4.3421e-04 4.3421e-04]
+     Fisher in the same directions F_ii           : [1.0680e+00 9.0073e-01 7.8752e-01 7.6811e-01 1.5255e-01 4.2060e-16 1.5986e-16 2.0547e-16 2.2135e-16 1.0358e-16 2.4652e-16]
+     F_ii / h_i                                    : [1.035e+00 9.600e-01 8.784e-01 9.375e-01 1.005e+00 9.686e-13 3.682e-13 4.732e-13 5.098e-13 2.385e-13 5.677e-13]
+  7                       11                         5.37                       3.26          2.24            3.19
+     eigenvalues h of the Hessian (tangent space): [1.0254 0.9152 0.8998 0.8809 0.8363 0.8122 0.8029 0.0279 0.0279 0.0279 0.0279]
+     Fisher in the same directions F_ii           : [7.7973e-01 7.5888e-01 9.1938e-01 9.4189e-01 7.1705e-01 7.4171e-01 8.5095e-01 6.3027e-09 1.5639e-16 4.8928e-16 2.3202e-16]
+     F_ii / h_i                                    : [7.604e-01 8.292e-01 1.022e+00 1.069e+00 8.574e-01 9.132e-01 1.060e+00 2.256e-07 5.597e-15 1.751e-14 8.303e-15]
+ 11                       11                         5.49                       4.47          4.49            4.72
+     eigenvalues h of the Hessian (tangent space): [1.0621 1.0212 0.9886 0.9663 0.9394 0.9182 0.9046 0.8743 0.8527 0.8491 0.7879]
+     Fisher in the same directions F_ii           : [0.9082 0.8196 0.7475 0.8797 0.6088 0.7508 0.8898 0.7456 0.6352 0.7601 0.531 ]
+     F_ii / h_i                                    : [0.855 0.803 0.756 0.91  0.648 0.818 0.984 0.853 0.745 0.895 0.674]
+
+Reading (2026-10-20). At the MAP of the d_V = 1 subspace map on the oracle (d = 12, n = 2048, prior
+precision 1), the tangent-space Hessian of the mean loss has 11 curved directions for every k: the k + 1
+directions inside the data's subspace (eigenvalues ~0.8-1.1, with the V-noise plane at k = 1 giving
+0.89 and 0.064) and the 11 - k directions outside it, which are curved (h = 9e-5 ... 0.03, growing
+with k) but carry NO gradient variance: the Fisher (covariance of per-example gradients) is 1e-16 there
+against F/h ~ 1 inside. Every example pushes the frame out of those directions identically, so the
+empirical minimiser sits at zero in them without sampling noise and the plug-in code pays nothing:
+(1/2) tr(F H^+) = 1.1, 1.1, 2.4, 3.3, 4.5 for k = 1, 2, 4, 7, 11 against the measured MAP-code slopes
+0.53, 1.46, 1.94, 2.24, 4.49 (the k = 1 value is low because the weakly curved second direction,
+h = 0.064, is not resolved by 100 warm-started L-BFGS steps per block). The Bayes code pays for every
+curved direction once n resolves it: the Laplace prediction (1/2) sum n h / (n h + 1), averaged over
+n = 256..2048, is 1.3, 4.3, 3.3, 5.4, 5.5 against the measured HMC slopes 2.0, 2.9, 3.2, 3.2, 4.7, the
+same ordering and magnitude (the Laplace numbers are rough: the prior on the raw frame is not the
+uniform prior on the sphere that the scale-free map actually has, and the outside curvature at k = 2
+and 4 sits right at the resolution threshold n h ~ 1). Conclusion: on this family the information
+equality F = H fails in the deterministically constrained directions, so the plug-in's prequential
+coefficient (1/2) tr(F H^-1) is below the Bayes learning coefficient, which counts curved directions
+of H regardless of F. The earlier statement "lambda_eff = k/2" describes the plug-in (MAP) code, not
+the Bayes code.
+
+Correction (2026-10-22, review item 1.8). The 11 - k outside directions are not curved: in the population
+they are quartic (tilting the frame by phi towards them moves the prediction at order phi^2, the KL at
+order phi^4; reports/oracle/bayes_code_hmc.txt, end). Their small Hessian eigenvalues here, identical across
+the outside directions and growing with k (9e-5 at k = 1 to 0.03 at k = 7), are the cross term of
+K = a |phi_r|^2 + c (|phi_r|^2 + |phi_e|^2)^2 evaluated at a MAP whose readable components carry sampling
+error: d^2K/dphi_e^2 = 4 c |phi_r|^2, which vanishes as n grows. A Laplace count built on them therefore
+mis-models these directions, and the "pred Bayes slope" column is superseded. The Bayes coefficient is
+lambda = k/2 + (11 - k)/4 (1/2 per readable, 1/4 per quartic direction), not (d - 1)/2, and the measured
+HMC slopes at 16384 targets agree with it (3.35, 3.05, 3.46, 4.44, 5.43). The F/H analysis of the readable
+directions and the plug-in prediction (1/2) tr(F H^+) stand.

@@ -1,0 +1,47 @@
+Jacobian lens across models (2026-10-21; jlens_<model>.json; same 1024-target protocol as jlens_gpt2.txt, label-only 4324.5 bits).
+Frame from all 32 names ('all') or the 16 training names ('train'); untrained twin seed 7. Columns: locus, cond(V_J) (all), code bits and gain over label-only (all / train), IIA iid (all / train), IIA on unseen names (all / train).
+
+== GPT-2 small (12 layers)
+   trained   layer0   cond  419.9  code    7842 /    7842 bits (gain  -3518 /  -3518)  IIA 0.07 / 0.07  unseen names 0.06 / 0.06
+   untrained layer0   cond    2.4  code    5172 bits (gain   -848)  IIA 0.04
+   trained   layer6   cond  161.6  code    7845 /    7829 bits (gain  -3520 /  -3505)  IIA 0.07 / 0.07  unseen names 0.06 / 0.06
+   untrained layer6   cond    1.6  code    5169 bits (gain   -844)  IIA 0.04
+   trained   layer9   cond  121.3  code    7592 /    7575 bits (gain  -3267 /  -3250)  IIA 0.07 / 0.07  unseen names 0.06 / 0.06
+   untrained layer9   cond    1.5  code    5176 bits (gain   -851)  IIA 0.04
+   trained   layer10  cond  119.3  code    1504 /    1530 bits (gain  +2821 /  +2794)  IIA 0.80 / 0.78  unseen names 0.78 / 0.06
+   untrained layer10  cond    1.5  code    5180 bits (gain   -855)  IIA 0.04
+   trained   layer11  cond  110.6  code     795 /     800 bits (gain  +3529 /  +3525)  IIA 0.98 / 0.98  unseen names 0.99 / 0.07
+   untrained layer11  cond    1.5  code    5175 bits (gain   -851)  IIA 0.04
+   trained   layer12  cond    7.6  code     698 /     707 bits (gain  +3626 /  +3618)  IIA 1.00 / 1.00  unseen names 0.99 / 0.07
+   untrained layer12  cond    1.4  code    5179 bits (gain   -855)  IIA 0.04
+== Qwen2.5-0.5B (24 layers)
+   trained   layer0   cond   27.0  code    8047 /    8047 bits (gain  -3723 /  -3723)  IIA 0.07 / 0.07  unseen names 0.06 / 0.06
+   untrained layer0   cond    2.9  code    5389 bits (gain  -1065)  IIA 0.03
+   trained   layer20  cond    5.7  code    7688 /    7690 bits (gain  -3364 /  -3366)  IIA 0.07 / 0.07  unseen names 0.06 / 0.06
+   untrained layer20  cond    1.4  code    5384 bits (gain  -1060)  IIA 0.05
+   trained   layer22  cond    4.0  code     991 /     993 bits (gain  +3334 /  +3331)  IIA 0.94 / 0.94  unseen names 0.90 / 0.06
+   untrained layer22  cond    1.4  code    5371 bits (gain  -1047)  IIA 0.06
+   trained   layer24  cond    3.6  code     663 /     668 bits (gain  +3662 /  +3657)  IIA 1.00 / 1.00  unseen names 1.00 / 0.06
+   untrained layer24  cond    1.4  code    5358 bits (gain  -1033)  IIA 0.06
+== Pythia-1.4b (24 layers)
+   trained   layer0   cond    9.4  code    7833 /    7833 bits (gain  -3509 /  -3509)  IIA 0.07 / 0.07  unseen names 0.06 / 0.06
+   untrained layer0   cond    1.8  code    5346 bits (gain  -1022)  IIA 0.00
+   trained   layer16  cond    4.1  code    2179 /    2182 bits (gain  +2145 /  +2143)  IIA 0.53 / 0.54  unseen names 0.67 / 0.06
+   untrained layer16  cond    1.3  code    5371 bits (gain  -1047)  IIA 0.00
+   trained   layer18  cond    3.3  code     827 /     829 bits (gain  +3498 /  +3495)  IIA 1.00 / 1.00  unseen names 1.00 / 0.06
+   untrained layer18  cond    1.3  code    5367 bits (gain  -1042)  IIA 0.00
+   trained   layer20  cond    3.2  code     663 /     665 bits (gain  +3662 /  +3659)  IIA 1.00 / 1.00  unseen names 1.00 / 0.06
+   untrained layer20  cond    1.3  code    5366 bits (gain  -1042)  IIA 0.01
+   trained   layer24  cond    2.8  code     609 /     611 bits (gain  +3715 /  +3714)  IIA 1.00 / 1.00  unseen names 1.00 / 0.06
+   untrained layer24  cond    1.2  code    5395 bits (gain  -1070)  IIA 0.00
+== Qwen3-1.7B-Base (28 layers)
+   trained   layer0   cond   27.1  code    7461 /    7461 bits (gain  -3137 /  -3137)  IIA 0.07 / 0.07  unseen names 0.06 / 0.06
+   untrained layer0   cond    3.4  code    5505 bits (gain  -1180)  IIA 0.04
+   trained   layer22  cond    5.4  code    5371 /    5387 bits (gain  -1046 /  -1063)  IIA 0.08 / 0.08  unseen names 0.07 / 0.06
+   untrained layer22  cond    1.3  code    5533 bits (gain  -1208)  IIA 0.05
+   trained   layer26  cond    4.0  code     919 /     918 bits (gain  +3405 /  +3406)  IIA 0.94 / 0.94  unseen names 0.92 / 0.06
+   untrained layer26  cond    1.2  code    5533 bits (gain  -1209)  IIA 0.05
+   trained   layer28  cond    3.4  code     732 /     735 bits (gain  +3593 /  +3589)  IIA 0.98 / 0.98  unseen names 0.99 / 0.06
+   untrained layer28  cond    1.2  code    5535 bits (gain  -1211)  IIA 0.04
+
+Reading. The parameter-free alignment is faithful at the last two to four layers of every model (GPT-2 layers 11-12: 0.98-1.00; Qwen2.5-0.5B 22-24: 0.94-1.00; Pythia-1.4b 18-24: 1.00; Qwen3-1.7B 26-28: 0.94-0.98), codes the targets 3330-3715 bits shorter than label-only, and fails on every untrained twin (IIA 0.00-0.06, codes 1020-1230 bits longer than label-only). The frame built from all 32 names generalises to the 16 unseen names (0.90-1.00) wherever it is faithful, the training-name frame never does (0.06): generalisation across names is a property of which directions are in the frame. The condition number of the J-vector matrix, the appendix's distortion, is 2-6 at the faithful loci of the newer models against 68-121 on GPT-2 (its name directions are far less orthogonal), 1.1-3.4 on the twins. Hypothesis H-A10 holds on all four models.

@@ -1,0 +1,36 @@
+GPT-2 IOI, single-map (MAP) code with 8192 and 32768 targets (jobs 1813482 / 1813552, one seed each,
+layers 0 and 11, adversary at layer 10, 2026-10-20). Regret = prequential loss minus the final fit's
+loss on the same targets; slopes per ln n after the batching correction (h_a3_gpt2_n{8192,32768}.json).
+
+configuration                              n=1024 (3 seeds)   n=8192 (n>=64)   n=32768: n>=64   n>=1024   n>=4096   regret at 32768
+valid subspace, layer 11 (12288 params)    48.9 +- 1.7        44.6 +- 7.9      37.0 +- 3.3      30.9 +- 8.6   19 +- 17   365 nats
+coupling map, layer 11 (trained)           225.5 +- 1.8       195.1 +- 7.2     174.8 +- 8.7     163 +- 11     167 +- 15  1803 nats
+untrained twin, subspace, layer 11         44.4 +- 1.1        41.4 +- 3.6      41.1 +- 4.1      52.8 +- 8.0   66 +- 13   442 nats
+manufactured (coupling on twin, layer 10)  988 +- 93          912 +- 87        798 +- 66        609 +- 60     656 +- 138 6775 nats
+layer 0 (subspace) / coupling at layer 0   0 / 12.3           0 / 7.0          0 / 48.5         0 / 95.6      0 / 152    0 / 530 nats
+
+Valid subspace at 32768, regret at block ends (n = 16 ... 32768):
+  21 35 75 109 147 172 224 278 312 358 389 365;  local slopes 20 57 50 54 37 75 77 50 66 46 -36
+Manufactured alignment: 38 130 290 488 1066 2242 3943 4374 4896 5605 6526 6775; local slopes
+  133 232 285 834 1698 2453 622 753 1023 1329 360.
+
+Reading. (1) On GPT-2 the valid alignment's coefficient is stable at roughly 45-50 per ln n from n = 32
+to n = 16384, i.e. about 100 constrained directions of the 12288-parameter frame, with no sign of the
+interpolation plateau seen on InterpBench below its parameter count; the negative last step (-36) is
+the final fit on 32768 targets being slightly worse than the block predictor (400 cold-start Adam steps on
+minibatches of 256 of the 32768 pairs; corrected 2026-10-22, the run used no L-BFGS), a limitation of the best-in-family proxy, not a feature of the code. (2) The
+manufactured alignment pays 6775 nats of regret by 32768 targets, 18x the valid alignment's 365; its
+local coefficient peaks at 1700-2450 between n = 512 and 2048, where new base/source combinations
+expose what the expressive map memorised, and settles near 600-1300 afterwards. (3) The expressive
+family on the trained network pays 165-195 throughout: the coupling map's coefficient is set by the
+family, the manufactured alignment's 4x larger one by the untrained network it is attached to. (4) The
+untrained twin's own subspace code grows faster at large n (41 -> 66): with more pairs the twin's
+copy of the name tokens is read out progressively. Figure: reports/talk_slt/gpt2_regret_vs_n.png.
+
+Three seeds at 32768 targets (jobs 1813552, 1813981, 1813982; h_a3_gpt2_n32768_3seeds.json):
+configuration                       n >= 64         n >= 1024       n >= 4096       regret at 32768
+valid subspace, layer 11            41.6 +- 5.0     40.9 +- 9.2     34.6 +- 14.6    419 nats
+coupling map, layer 11 (trained)    146 +- 18       131 +- 29       129 +- 40       1523 nats
+manufactured (twin, layer 10)       826 +- 35       726 +- 63       795 +- 70       7081 nats
+The one-seed numbers above are confirmed: the valid coefficient is 35-42 over every range, the
+manufactured alignment's 20x larger.

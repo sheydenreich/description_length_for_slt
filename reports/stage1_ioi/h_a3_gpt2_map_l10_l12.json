@@ -1,0 +1,102 @@
+{
+ "lambda": 6016.0,
+ "n_min": 64,
+ "rows": [
+  {
+   "configuration": "trained/layer0/subspace",
+   "seeds": 2,
+   "corrected_slope": -5.682744085788728e-06,
+   "seed_se": 1.6944482922554123e-06,
+   "fit_se": 5.0336383429022386e-05,
+   "final_regret_nats": 8.80267471075058e-05
+  },
+  {
+   "configuration": "trained/layer0/subspace/map=coupling",
+   "seeds": 2,
+   "corrected_slope": 11.561455965042114,
+   "seed_se": 0.9563153982162457,
+   "fit_se": 1.4151237456195291,
+   "final_regret_nats": 85.45889377593994
+  },
+  {
+   "configuration": "trained/layer0/subspace/untrained",
+   "seeds": 2,
+   "corrected_slope": -1.7738342285156245e-05,
+   "seed_se": 8.773803710937496e-06,
+   "fit_se": 4.562178174616495e-06,
+   "final_regret_nats": -6.967782974243164e-05
+  },
+  {
+   "configuration": "trained/layer10/subspace",
+   "seeds": 2,
+   "corrected_slope": 65.09477659892289,
+   "seed_se": 2.9120879882946547,
+   "fit_se": 4.771346799594291,
+   "final_regret_nats": 363.5878893453628
+  },
+  {
+   "configuration": "trained/layer10/subspace/locus=layer0",
+   "seeds": 2,
+   "corrected_slope": -5.682744085788728e-06,
+   "seed_se": 1.6944482922554123e-06,
+   "fit_se": 5.0336383429022386e-05,
+   "final_regret_nats": 8.80267471075058e-05
+  },
+  {
+   "configuration": "trained/layer10/subspace/map=coupling",
+   "seeds": 2,
+   "corrected_slope": 196.34441198129207,
+   "seed_se": 11.042502011545023,
+   "fit_se": 15.974218716154814,
+   "final_regret_nats": 973.2858530413359
+  },
+  {
+   "configuration": "trained/layer10/subspace/untrained",
+   "seeds": 2,
+   "corrected_slope": 42.97018972635268,
+   "seed_se": 2.8112982928752785,
+   "fit_se": 5.52125725922828,
+   "final_regret_nats": 200.07513785362244
+  },
+  {
+   "configuration": "trained/layer12/subspace",
+   "seeds": 2,
+   "corrected_slope": 65.09574932735413,
+   "seed_se": 0.7395653085783138,
+   "fit_se": 16.392698477527453,
+   "final_regret_nats": 392.61624523997307
+  },
+  {
+   "configuration": "trained/layer12/subspace/locus=layer0",
+   "seeds": 2,
+   "corrected_slope": -5.682744085788728e-06,
+   "seed_se": 1.6944482922554123e-06,
+   "fit_se": 5.0336383429022386e-05,
+   "final_regret_nats": 8.80267471075058e-05
+  },
+  {
+   "configuration": "trained/layer12/subspace/map=coupling",
+   "seeds": 2,
+   "corrected_slope": 403.99553383737805,
+   "seed_se": 45.19737878330047,
+   "fit_se": 50.31729865228347,
+   "final_regret_nats": 1823.009195331484
+  },
+  {
+   "configuration": "trained/layer12/subspace/untrained",
+   "seeds": 2,
+   "corrected_slope": 44.88633431196213,
+   "seed_se": 2.2536191880702887,
+   "fit_se": 6.6599498665092485,
+   "final_regret_nats": 208.38866075873375
+  },
+  {
+   "configuration": "untrained/layer10/coupling",
+   "seeds": 2,
+   "corrected_slope": 750.6918365743011,
+   "seed_se": 1.5568472661076953,
+   "fit_se": 154.31683387022818,
+   "final_regret_nats": 3315.3270644228905
+  }
+ ]
+}

@@ -1,0 +1,70 @@
+{
+ "lambda": null,
+ "n_min": 1024,
+ "rows": [
+  {
+   "configuration": "trained/layer0/subspace",
+   "seeds": 1,
+   "corrected_slope": -0.00028444007039070114,
+   "seed_se": NaN,
+   "fit_se": 6.358515908914955e-05,
+   "final_regret_nats": -0.0009448565542697906
+  },
+  {
+   "configuration": "trained/layer0/subspace/map=coupling",
+   "seeds": 1,
+   "corrected_slope": 4.896192812919617,
+   "seed_se": NaN,
+   "fit_se": 5.139508205011921,
+   "final_regret_nats": 120.91536509990692
+  },
+  {
+   "configuration": "trained/layer0/subspace/untrained",
+   "seeds": 1,
+   "corrected_slope": -0.00015479326248168934,
+   "seed_se": NaN,
+   "fit_se": 3.291271221718526e-05,
+   "final_regret_nats": -0.0004737377166748047
+  },
+  {
+   "configuration": "trained/layer11/subspace",
+   "seeds": 1,
+   "corrected_slope": 71.44539221227168,
+   "seed_se": NaN,
+   "fit_se": 9.95175342952104,
+   "final_regret_nats": 393.6612512394786
+  },
+  {
+   "configuration": "trained/layer11/subspace/locus=layer0",
+   "seeds": 1,
+   "corrected_slope": -0.00028444007039070114,
+   "seed_se": NaN,
+   "fit_se": 6.358515908914955e-05,
+   "final_regret_nats": -0.0009448565542697906
+  },
+  {
+   "configuration": "trained/layer11/subspace/map=coupling",
+   "seeds": 1,
+   "corrected_slope": 198.7567532565444,
+   "seed_se": NaN,
+   "fit_se": 31.279691518875786,
+   "final_regret_nats": 1568.80347340554
+  },
+  {
+   "configuration": "trained/layer11/subspace/untrained",
+   "seeds": 1,
+   "corrected_slope": 50.029703271388996,
+   "seed_se": NaN,
+   "fit_se": 8.614244383715318,
+   "final_regret_nats": 326.37169349193573
+  },
+  {
+   "configuration": "untrained/layer10/coupling",
+   "seeds": 1,
+   "corrected_slope": 1085.4669625017789,
+   "seed_se": NaN,
+   "fit_se": 173.9389611811606,
+   "final_regret_nats": 6632.390394203365
+  }
+ ]
+}

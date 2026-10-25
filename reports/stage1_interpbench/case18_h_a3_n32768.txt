@@ -1,0 +1,14 @@
+H-A3 on InterpBench 18 with 32768 targets, MAP subspace code (jobs 1814013/4, 2026-10-21; 3 seeds; L-BFGS 100
+steps per block, warm start, prior 0.01). Slopes per ln n, batching-corrected (case18_h_a3_dv{4,1}_n32768.json).
+
+                         n >= 64         n >= 512        n >= 2048       earlier: 1024-run / 8192-run (n >= 64)
+d_V=4 resid_2 (valid)    22.6 +- 4.1     27.1 +- 5.7     31.7 +- 8.4     8 +- 3 / 16.8 +- 2.8
+d_V=4 resid_1 (missp.)   159 +- 15       186 +- 18       178 +- 20       ~107 / 91
+d_V=1 resid_2 (valid)    32.6 +- 2.0     40.5 +- 0.1     42.0 +- 0.0     12 / 31.5
+d_V=1 resid_1 (missp.)   121 +- 15       120 +- 12       135 +- 17       ~130 / 115
+
+Reading. The valid alignment's coefficient keeps rising slowly with the range (23 -> 27 -> 32 for d_V 4,
+33 -> 40 -> 42 for d_V 1) and the 8192-run's "45 over the last doublings" is confirmed as the local value
+beyond n ~ 2000: with 1040 frame parameters the subspace family on InterpBench has a plug-in coefficient
+of roughly 30-40 at n in [2048, 32768], 6-8% of the nominal 512, consistent with GPT-2's 35-50 of 6016
+(0.6-0.8%). Whether it settles is still open at this range; the misspecified locus is 4-6x higher.

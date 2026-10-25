@@ -1,0 +1,58 @@
+Learner coefficients (regret slope per ln n of the MAP code, batching-corrected, n = 16..1024, 3 seeds) for
+every recorded configuration of the single-map learner; `bitsev-h-a3 <run> --n-min 64`. The regret is the
+prequential loss minus the loss of the final fit on the same targets. For the MAP learner this is the
+learner's coefficient kappa in the plan's sense (T4), not the Bayes lambda; the two coincide only for a
+Bayes predictive in a regular model.
+
+GPT-2 IOI (results/stage1_ioi_gpt2_map0; width 768, d_V 16, nominal Grassmannian lambda 16*752/2 = 6016,
+subspace frame 12288 parameters; coupling map 1.9 M parameters)
+  configuration                                 slope          regret at 1024   note
+  valid subspace, layer 11                      48.9 +- 1.7    279 nats         n < frame parameters: interpolation regime
+  same locus, coupling map (trained network)    225.5 +- 1.8   1102 nats
+  untrained twin, subspace, layer 11            44.4 +- 1.1    205 nats         learns the twin's name copy
+  manufactured alignment (coupling, twin 7, L10)  988 +- 93    4323 nats        IIA 0.86 on the training names
+  manufactured alignment (coupling, twin 8, L10)  950 +- 82    4174 nats
+  layer 0 (subspace, trained or twin)           0.0            0 nats           nothing learned: predictor identical in every block
+  layer 0, coupling                             12.3 +- 0.9    89 nats
+The Langevin-hedged arm (results/stage1_ioi_gpt2_sgld4) reproduces every slope within 2 nats.
+
+InterpBench 18, freq, d_V 4 (results/stage1_ib18_dv4_map; width 260, nominal lambda 512, frame 1040 parameters)
+  valid subspace, resid_2                       8.4 +- 2.9     49 nats          interpolation regime; 17-21 at n = 8192 (case18_h_a3_n8192.txt)
+  coupling at resid_2 (trained)                 474 +- 1       2114 nats
+  manufactured alignment (coupling, twin, resid_2)  255 +- 130  1108 nats
+  misspecified subspace, resid_1                107 +- 15      529 nats         excess-loss drift, not a log law
+  wrong locus resid_0                           109 +- 10      494 nats
+
+Reading. (1) The manufactured alignment's coefficient is 20x the valid alignment's on GPT-2 (988 vs 49)
+and 30x on InterpBench (255 vs 8): the expressive map on the untrained network keeps paying for every
+block, the valid subspace stops paying once its span is found. In the plan's decomposition of the gain,
+G(n) = n*delta_loss + delta_lambda*ln n + ..., the valid-vs-manufactured comparison is carried by the
+coefficient term as well as by the loss term. (2) The same coupling family on the trained network has
+a coefficient of 225 (GPT-2) / 474 (InterpBench): the family's coefficient depends on the network it is
+attached to, i.e. on the data distribution, as a learning coefficient should. (3) Both valid subspaces
+were measured below their parameter count (12288 and 1040 frame parameters at n <= 1024); the 8192-
+and 32768-target runs (InterpBench done / queued, GPT-2 jobs bitsev-ioi-map-n8192 and -n32768 submitted
+2026-10-20) measure the asymptotic regime.
+
+GPT-2 IOI, subspace dimension 4 and 64 (results/stage1_ioi_gpt2_map_dv4, _dv64; 2 seeds, same protocol,
+h_a3_gpt2_map_dv4.json, h_a3_gpt2_map_dv64.json; d_V 16 rows above for comparison)
+  configuration                                 d_V 4            d_V 16          d_V 64
+  valid subspace, layer 11                      79.0 +- 4.6      48.9 +- 1.7     55.9 +- 1.6
+  same locus, coupling map (trained network)    389 +- 12        225.5 +- 1.8    160 +- 3
+  untrained twin, subspace, layer 11            26.7 +- 0.3      44.4 +- 1.1     48.4 +- 2.4
+  manufactured alignment (coupling, twin, L10)  817 +- 16        988 +- 93       652 +- 4
+  layer 0, coupling                             12.3 +- 1.3      12.3 +- 0.9     13.7 +- 4.2
+GPT-2 IOI, layers 10 and 12, d_V 16 (results/stage1_ioi_gpt2_map_l10_l12; 2 seeds; job 1820081;
+h_a3_gpt2_map_l10_l12.json; adversary with 400 steps instead of 4000)
+  configuration                                 layer 10         layer 12
+  valid subspace                                65.1 +- 2.9      65.1 +- 0.7
+  same locus, coupling map (trained network)    196 +- 11        404 +- 45
+  untrained twin, subspace                      43.0 +- 2.8      44.9 +- 2.3
+  manufactured alignment (coupling, twin, L10, 400 steps)  751 +- 2
+Reading: see curvature_gpt2.txt (across loci and subspace dimensions). The valid alignment's coefficient
+is flat in d_V while its nominal Bayes coefficient grows from 1528 to 22528; the controls stay 3-20x above.
+
+Hierarchical equality, Bayes code by HMC (results/stage1_toy_hmc, 5 seeds; reports/stage1_toy/bayes_code_hmc.txt):
+valid h1 12.9 +- 0.1 (nominal 56), coupling at h1 22.8 +- 7.7, wrong locus 58.5 +- 15, twin 0.17. These are
+regret slopes of a genuine Bayes predictive against its own final fit, i.e. estimates of the Bayes
+coefficient in the interpolation regime (496 rotation parameters, n <= 1024).

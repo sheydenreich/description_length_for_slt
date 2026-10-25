@@ -1,0 +1,62 @@
+GPT-2 IOI, 2026-10-22/23: (1) one learned inverse temperature per predictor, (2) the Hessian on held-out targets.
+
+(1) Temperature arm. Every map family (valid subspace, untrained twin, wrong locus, coupling, manufactured
+coupling on the twin) is wrapped in maps.Tempered: one scalar exp(log_scale) on the frozen readout's logits,
+learned with the map (init 1, the prior's weight decay pulls towards 1); single-map MAP code otherwise as in
+results/stage1_ioi_gpt2_map_n32768 (runner flag --temperature; the record's learner string does not show it,
+settings.json does). Runs: results/stage1_ioi_gpt2_map_n32768_temp (3 seeds, jobs 1830343/5/7),
+results/stage1_ioi_gpt2_map0_temp (1024 targets, 3 seeds, 1830344/6/8), results/stage1_ioi_gpt2_map_n131072
+and _n131072_temp (1 seed each, 1830349/50; seeds 1 and 2 submitted 2026-10-23, 1842451-4).
+Decompositions: gain_decomposition_gpt2_n32768_temp.json, gain_decomposition_gpt2_n1024_temp.json.
+
+Gain of the valid layer-11 subspace, bits (= fit term + regret term), mean of 3 seeds
+                                 32768 as is              32768 tempered           1024 tempered
+  vs label-only                  +116619 = +116984 − 365  +118248 = +118680 − 432  +3418 = +3776 − 358
+  vs manufactured (twin, L10)      +7662 =   −1950 + 9612   +9265 =      −4 + 9270  +4702 =  −303 + 5005
+  vs coupling, trained net          −371 =   −1965 + 1594   +1092 =     −99 + 1191   +945 =  −179 + 1124
+  vs untrained twin, subspace    +112388 = +112445 −  57  +108318 = +107552 + 766  +3906 = +3240 + 666
+
+Calibration (final fits, seed 0, median loss on unflipped targets; channel floor 0.0497 nats):
+  as is: valid 0.092, manufactured 0.053, trained coupling 0.050; tempered: 0.051, 0.051, 0.050.
+Block rate above the floor, last block 16384-32768 (nats/target): as is valid 0.048, manufactured 0.021,
+coupling 0.011; tempered 0.012, 0.043, 0.011.
+
+Gain against the manufactured alignment at block ends 1024 ... 32768, tempered: 4203 4924 5810 7442 8531 9265
+(monotone; as is it peaked at 16384). Against the trained coupling, tempered: 877 910 1021 1127 1121 1092.
+
+Reading. The temperature removes the calibration advantage of the expressive maps: the valid subspace's
+clean-target loss drops to the channel floor, and the fit term against the manufactured alignment is −4 bits
+of 9265. With every predictor calibrated, the verdict between the valid and the manufactured explanation is
+carried entirely by the regret term, i.e. by the learner coefficients; no crossover by 32768 targets. The
+trained coupling stays ~1100 bits behind (fit term −99 ± ~400, within noise). Against label-only and the twin
+the gain is all fit term with or without the temperature.
+
+131072 targets (one seed each; seeds 1-2 pending): gain at block ends 1024 ... 131072
+  as is,    vs manufactured: 3966 7103 7630 8592 9717 8913 8766 6114   (fit −2765, regret +8879)
+            vs coupling:      921  946  986  932  582 −471 −2078 −6093
+  tempered, vs manufactured: 6478 7166 7892 9080 10882 12810 12751 11635
+            vs coupling:     1137 1138 1189 1390 1333 1259 1897  790
+Untempered, the gain against the forgery peaks at 16384 and shrinks; the coupling wins by 6.1k bits. Tempered,
+the gain peaks at 32768 and dips by 1.2k over the last doubling. The fit/regret split is NOT reliable at
+131072: the learner's budget is fixed (400 Adam steps, minibatches of 256) whatever n, so the final fit on
+131072 targets is under-optimised (tempered manufactured final fit 0.064 nats above the floor in-sample
+against 0.012 for its own block predictor on the last block). Decide the large-n behaviour on the three
+seeds and with a converged final fit before quoting it.
+
+(2) Held-out Hessian (job 1830351; results/ioi_curvature_gpt2_full_heldout_hessian; archived as
+curvature_gpt2_layer11_full_heldout_hessian.json). Same MAP as curvature_gpt2_layer11_full_heldout_fisher
+(fit on 1024 targets, layer 11, d_V 16, L-BFGS 100 steps, train NLL 0.323 < channel floor 0.360), dense
+Hessian and Fisher both on 4096 fresh i.i.d. targets.
+                                   Hessian on training targets   Hessian on held-out targets
+  tr H                             683                           776
+  tr F (in H's eigendirections)    14.0                          13.8
+  F/H                              2.0 %                         1.7 %
+  negative eigenvalues             256 (gauge, ~1e-5)            983 (min −0.145)
+  Laplace count ½ Σ nh/(nh+α)      6015 (n = 1024)               5651
+  plug-in ½ tr(F H⁻¹)              70.6                          73.7
+Reading. The curvature is population curvature, not an artefact of the interpolating fit: the held-out
+Hessian is slightly larger, and the Fisher is still ~2 % of it. The 983 negative directions are where the
+1024-target MAP has overfitted (the held-out loss still decreases there). The nominal λ ≈ 6000 of a Bayes
+code on this family stands; ½ tr(F H⁻¹) moves from 70.6 to 73.7 (measured κ 49 ± 2).
+Open: the information equality F = H holds for a correctly specified family; the subspace family is
+misspecified by calibration (above). Whether F/H rises at a tempered MAP is a cheap next check.

@@ -1,0 +1,13 @@
+Stronger manufactured alignment on InterpBench 18 (job 1812148, 8.7 h on EPYC, 2026-10-21): the coupling map
+(width 256, 4 blocks, the GPT-2-sized family instead of the small testbeds' 64 x 2) trained for 4000 steps instead of 400 on the untrained twin at resid_2, scored with the
+canonical mixture code on the same 1024 targets (label-only 1342 bits), twins 7 and 8, 3 seeds.
+
+seed  twin 7: code (bits)  gain over label-only  IIA     twin 8: code  gain      IIA
+0     1476                 -134                  0.50    1566          -224      0.50
+1     1546                 -204                  0.45    1720          -378      0.45
+2     2665                 -1323                 0.45    1623          -281      0.50
+
+Reading: ten times the training budget does not make the manufactured alignment convincing on this testbed:
+its interchange accuracy stays at 0.45-0.50 (chance for the 3-valued variable is 0.33; the 400-step version
+had 0.6) and its code is 130-1300 bits longer than label-only on every seed and both twins. Criterion 1 of the
+gate (a convincing false explanation exists) remains unmet on InterpBench; criterion 2 holds trivially.

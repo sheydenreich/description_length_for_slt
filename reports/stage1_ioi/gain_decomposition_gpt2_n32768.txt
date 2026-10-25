@@ -1,0 +1,52 @@
+GPT-2 IOI, single-map MAP code, 32768 targets, 3 seeds (results/stage1_ioi_gpt2_map_n32768; 2026-10-22).
+Which term carries the gain of the valid layer-11 subspace (d_V 16) over each control?
+
+  G(n) = DL_C(n) − DL_H(n) = [Fit_C(n) − Fit_H(n)] + [Reg_C(n) − Reg_H(n)]
+  Fit_X(n): loss of X's final fit (on all 32768 targets) on the first n targets   -> ≈ n·Δℓ
+  Reg_X(n): prequential code minus Fit_X(n), as in bitsev-h-a3                    -> Δκ ln n + O(1)
+Tool: python -m bitsev.experiments.gain_decomposition results/stage1_ioi_gpt2_map_n32768 \
+        --hypothesis trained/layer11/subspace --controls untrained/layer10/coupling \
+        trained/layer11/subspace/map=coupling trained/layer11/subspace/untrained \
+        trained/layer11/subspace/locus=layer0 --out reports/stage1_ioi/gain_decomposition_gpt2_n32768.json
+The label-only code is rebuilt from the tokenizer (targets hash 221ae7763d8eb720 checked; the runs used
+the runner default of 4000 prompts per split, settings.json records the 3214 kept after length filtering).
+
+Bits at n = 32768 (mean of 3 seeds)           gain     = fit term  + regret term
+  vs label-only                             +116619    = +116984   −365
+  vs untrained twin, subspace, layer 11     +112388    = +112445   −57
+  vs wrong locus (layer 0)                  +234254    = +234858   −605
+  vs manufactured (coupling, twin, L10)       +7662    =   −1950   +9612
+  vs coupling map, trained net, layer 11       −371    =   −1965   +1594
+
+Gain against the manufactured alignment at block ends n = 1024 / 4096 / 16384 / 32768:
+  4952 / 6284 / 8285 / 7662 bits (peak at 16384); against the trained coupling 914 / 935 / 493 / −371.
+The same split on the 1024-target headline run (results/stage1_ioi_gpt2_map0, 3 seeds; final fits on 1024
+targets, so the flows' fit is in-sample and optimistic): manufactured +5370 = −464 + 5834; trained coupling
++925 = −261 + 1186; label-only +3385 = +3660 − 276. One-seed 8192 run: manufactured +6737 = −2263 + 9001.
+
+Checks of the fit term that do not use in-sample losses (nats per target):
+                                  final fit in-sample  final fit held-out (1000 iid)  last block 16384-32768
+  valid subspace                  0.407                0.427                          0.408
+  manufactured alignment          0.366                0.390                          0.382
+  coupling, trained network       0.366                0.387                          0.371
+  channel floor (ε 0.05, 32 names): 0.360. IIA iid 0.997-1.0 for all three.
+Clean (unflipped) targets, final fits, median loss: valid 0.092, trained coupling 0.050, manufactured 0.053
+(channel floor on a clean target 0.050; flipped targets: valid 5.94 mean vs 6.46 ideal).
+
+Reading. (1) Against label-only, the twin and the wrong locus the gain is pure falsification: the fit term
+is the whole gain, the regret term a few hundred bits against the hypothesis. (2) Against the manufactured
+alignment the fit term is negative: with enough pairs the flow on the untrained network codes the
+counterfactual targets better than the faithful subspace, in-sample, on held-out pairs and in the last
+prequential block alike. The whole 7.7k-bit margin is the regret (learning cost) term: the verdict is
+Occam's, not falsification's, already at n = 1024. (3) The fit advantage of the flows is calibration, not
+causal accuracy: GPT-2 puts ≈ 96 % on the IO name, the subspace swap inherits that confidence, while the
+expressive maps push the readout to saturation and match the algorithm's deterministic targets behind the
+channel. (4) Consequence: the fit term grows linearly against the hypothesis while the regret term grows
+like ln n, so the ordering flips at large n: against the trained coupling near n ≈ 20k (−371 bits at
+32768), against the manufactured alignment by rough extrapolation near n ≈ 2·10^5 (regret ≈ 1400 bits
+per ln n over 2048-32768, fit −0.06 bits per target). The statements "the manufactured alignment is longer
+than label-only" (−1986 bits) and "the coupling codes ~1000 bits behind the subspace" hold at n = 1024; at
+32768 the manufactured alignment beats label-only by 108956 bits (summary.md of the run).
+(5) Untested remedy: a one-parameter temperature (or a calibrated channel) for every predictor would remove
+the calibration advantage and leave the comparison to the regret term.
+Figures: reports/talk_slt/gain_decomposition.png, code_rate_per_block.png.

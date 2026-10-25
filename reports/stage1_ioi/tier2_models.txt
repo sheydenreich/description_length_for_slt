@@ -1,0 +1,58 @@
+Stage 1 on IOI in larger language models (2026-10-21). Same protocol as GPT-2 (1024 targets, noise 0.05,
+geometric schedule r = 2, d_V 16, subspace map, 400 map steps; learner: the single-map MAP code (laplace, no
+samples) for Llama and Qwen2.5-3B, the mixture-of-4 for Qwen3 (settings.json of each run); manufactured
+alignment = coupling map with 4000 steps on the untrained twin at the strongest valid locus). Label-only
+code 4324.5 bits for every model (same targets, hash 927e660f3575b1b1). Loci chosen from the map sweeps
+(map_sweep_<model>.json). Summaries: llama31_8b_summary.md, qwen25_3b_summary.md; Qwen3 from
+results/stage1_ioi_qwen3_17b/records (3 seeds; the manufactured-alignment arm finished after the first archive
+and was added on 2026-10-22).
+
+Gains over label-only in bits (IIA on the i.i.d. split); "twin" = same subspace family on the untrained
+twin, "coupling" = coupling family on the trained network, "wrong locus" = layer 0.
+
+Llama-3.1-8B (H100, bf16, 12 h; job 1816979; 1 seed; model accuracy 0.999)
+  valid subspace   L28 +3018 (0.93)   L30 +3101 (0.92)   L32 +1709 (0.71)
+  twin             L28  -537 (0.27)   L30  -639 (0.27)   L32  -606 (0.33)
+  coupling         L28 +1635 (0.89)   L30 +1436 (0.87)   L32  +827 (0.93)
+  wrong locus      -3527 (0.07);   manufactured (coupling, twin, L30) -1830 (IIA 0.51)
+  gains vs controls at L30: twin +3740, coupling +1665, wrong locus +6628; all reject at alpha 0.01 by n <= 12.
+
+Qwen2.5-3B (A100, 6 h; job 1817690; 1 seed; model accuracy 0.982)
+  valid subspace   L32  -445 (0.24)   L34 +3129 (0.94)   L36 +2702 (0.90)
+  twin             L32  +183 (0.41)   L34  +223 (0.43)   L36  +188 (0.42)
+  coupling         L32  -667 (0.67)   L34 +1690 (0.89)   L36 +1385 (0.90)
+  wrong locus      -3548 (0.07);   manufactured (coupling, twin, L34) -1723 (IIA 0.59)
+  gains vs controls at L34: twin +2906, coupling +1439, wrong locus +6678; reject by n <= 20.
+  Layer 32 (attainable IIA 0.24) is a genuinely non-intervenable locus: the valid family loses to its own
+  twin there (-445 vs +183), the first case where the twin control beats the trained network at a locus
+  that a probe reads perfectly (probe accuracy 0.90).
+
+Qwen3-1.7B-Base (A100, jobs 1814205-7; 3 seeds, mean +- s.e.; model accuracy 0.987)
+  valid subspace   L22  +712 +- 2 (0.40)   L26 +3001 +- 4 (0.97)   L28 +3042 +- 3 (0.99)
+  twin             L22  +618 +- 4 (0.54)   L26  +660 +- 3 (0.56)   L28  +692 +- 1 (0.57)
+  coupling         L22 +1548 +- 47 (0.90)  L26 +2318 +- 61 (0.97)  L28 +2047 +- 25 (0.96)
+  wrong locus      -3137 (0.07);   manufactured (coupling, twin, L26) -147 +- 53 (IIA 0.71; seeds
+  0.72 / 0.69 / 0.72; 4000 steps), i.e. 3148 bits behind the valid subspace at L26.
+  The untrained Qwen3 twin codes the targets 620-690 bits below label-only with IIA 0.54-0.57: its
+  residual stream carries the name tokens almost linearly (as Pythia's does at 0.39), so the twin
+  control is strong here and the valid alignment still beats it by 2300 bits.
+
+Gemma-2-2b map sweep (job 1815535, H100; 400 steps, lr 1e-2; map_sweep_gemma2_2b.json): subspace IIA on
+the i.i.d. split 0.08-0.10 at layers 0-16, 0.52/0.58 (d_V 16/64) at 20, 0.64/0.70 at 22, 0.99 at 24,
+0.96/0.99 at 26. The coupling map does not learn at this learning rate on Gemma (loss 3.47 nats, IIA
+0.08 at every layer): a Stage 1 run on Gemma IOI needs the coupling learning rate 1e-3 used for the
+adversary. Loci for a Stage 1 run: 22, 24, 26.
+
+Reading. (1) The GPT-2 verdicts transfer to models 20-50x larger without any tuning: at the loci where
+the name is intervenable the valid subspace gains 3000-3100 bits on every model (Llama 3101, Qwen2.5-3B
+3129, Qwen3 3042, GPT-2 3385 with the same single-map MAP code), the controls are rejected at alpha 0.01 within the first 10-20 targets,
+and the manufactured alignment never beats label-only (-1700 to -1800 bits under the single-map code; -147
+under Qwen3's mixture of 4, which rescues confident errors as it did for GPT-2's +704) although its IIA
+(0.51-0.71) would pass an accuracy threshold of 0.5. All at 1024 targets: on GPT-2 at 32768 targets the
+manufactured alignment beats label-only by 108956 bits (gain_decomposition_gpt2_n32768.txt). (2) The coupling family on the trained network is always
+1000-1700 bits behind the subspace at the same locus with the same or higher IIA: the code charges the
+family's complexity, which IIA does not see. (3) The gain is nearly model-independent because it is
+dominated by n times the loss gain of a near-perfect predictor on 1016 targets behind the 0.05 noise
+channel; the differences between models are in the controls (twin strength 0.27-0.57) and in where the
+intervenable loci sit (last 2-4 layers in every model; Qwen2.5-3B needs layer 34 of 36, Llama 28-30
+of 32).

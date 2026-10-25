@@ -1,0 +1,65 @@
+Corrected CAE and D1 on hierarchical equality (2026-10-22; review items 1.7, 2.1, 2.2)
+Run: results/stage1_toy_dv4_mix4_rr_diag (job 1827641, EPYC, 2.5 h): the d_V 4 mixture-of-4 run of
+summary_dv4_mix4_rr.md repeated with the corrected diagnostics (commit bb77a66). All 169 records shared with
+the archived run reproduce its code lengths exactly (max |delta| 0.0 nats); the second-twin adversary
+(--adversary-only) was not repeated. Five seeds, mean +- s.e.; disagreement rates on the 1000 i.i.d. pairs.
+
+CAE: mapped = interchange on the aligned subspace scored against A(b; V1 <- V1(s)); complement = interchange
+on the complement scored against A(s; V1 <- V1(b)) (it is the mapped interchange with base and source
+exchanged); old unmapped = the same complement interchange scored against A(b) (the archived, mis-specified
+prediction); random dir = random 4-dim subspace scored against A(b) (output sensitivity, not an error);
+CAE = mean of mapped and complement. D1 (property of network and locus, distinct base inputs, N = 795):
+nn ratio = median between-class / median within-class nearest-neighbour distance; sep ratio = smallest
+between-class distance / median within-class NN distance.
+
+configuration                                   IIA       mapped   complement old unmapped   random dir          CAE  D1 nn / sep ratio
+trained/h1/rotation                     0.995±0.002  0.012±0.003  0.017±0.004  0.470±0.002  0.245±0.000  0.015±0.003  2.12 / 0.58
+trained/h1/rotation/locus=input         0.555±0.025  0.448±0.026  0.428±0.016  0.499±0.007  0.501±0.000  0.438±0.021  1.31 / 0.25
+trained/h1/rotation/map=coupling        0.998±0.001  0.008±0.002  0.013±0.005  0.480±0.003  0.245±0.000  0.011±0.004  2.12 / 0.58
+trained/h1/rotation/untrained           0.528±0.000  0.471±0.001  0.525±0.001  0.470±0.001  0.473±0.000  0.498±0.001  1.26 / 0.28
+trained/h2/rotation                     0.726±0.002  0.274±0.001  0.259±0.000  0.471±0.000  0.008±0.000  0.266±0.001  7.76 / 3.96
+trained/h2/rotation/locus=input         0.555±0.025  0.448±0.026  0.428±0.016  0.499±0.007  0.501±0.000  0.438±0.021  1.31 / 0.25
+trained/h2/rotation/map=coupling        0.999±0.000  0.053±0.052  0.052±0.047  0.484±0.001  0.008±0.000  0.053±0.049  7.76 / 3.96
+trained/h2/rotation/untrained           0.528±0.000  0.471±0.001  0.529±0.001  0.471±0.001  0.473±0.000  0.500±0.000  1.29 / 0.28
+untrained/h2/coupling                   0.508±0.007  0.490±0.007  0.507±0.007  0.499±0.006  0.473±0.000  0.498±0.003  1.29 / 0.28
+trained@1/h1/rotation                   0.529±0.002  0.472±0.002  0.518±0.005  0.476±0.002  0.473±0.000  0.495±0.003  1.26 / 0.28
+trained@1/h2/rotation                   0.522±0.001  0.481±0.002  0.531±0.002  0.471±0.002  0.480±0.000  0.506±0.002  1.27 / 0.27
+trained@2/h1/rotation                   0.484±0.002  0.512±0.002  0.474±0.005  0.506±0.002  0.494±0.000  0.493±0.002  1.27 / 0.28
+trained@2/h2/rotation                   0.497±0.002  0.499±0.001  0.495±0.003  0.510±0.003  0.486±0.000  0.497±0.002  1.26 / 0.26
+trained@4/h1/rotation                   0.470±0.002  0.531±0.002  0.477±0.002  0.516±0.004  0.524±0.000  0.504±0.002  1.25 / 0.27
+trained@4/h2/rotation                   0.473±0.002  0.523±0.004  0.489±0.002  0.513±0.002  0.509±0.000  0.506±0.003  1.26 / 0.26
+trained@8/h1/rotation                   0.535±0.003  0.470±0.002  0.518±0.003  0.477±0.002  0.465±0.000  0.494±0.002  1.29 / 0.26
+trained@8/h2/rotation                   0.526±0.002  0.474±0.002  0.526±0.002  0.472±0.002  0.477±0.000  0.500±0.002  1.28 / 0.28
+trained@16/h1/rotation                  0.464±0.001  0.533±0.003  0.479±0.003  0.527±0.001  0.535±0.000  0.506±0.001  1.30 / 0.22
+trained@16/h2/rotation                  0.464±0.001  0.534±0.001  0.476±0.001  0.522±0.001  0.528±0.000  0.505±0.001  1.32 / 0.23
+trained@32/h1/rotation                  0.540±0.001  0.466±0.003  0.523±0.002  0.493±0.005  0.462±0.000  0.495±0.002  1.28 / 0.19
+trained@32/h2/rotation                  0.550±0.001  0.449±0.003  0.523±0.001  0.476±0.003  0.476±0.000  0.486±0.002  1.38 / 0.21
+trained@64/h1/rotation                  0.503±0.002  0.495±0.003  0.467±0.001  0.499±0.004  0.471±0.000  0.481±0.001  1.31 / 0.23
+trained@64/h2/rotation                  0.523±0.002  0.480±0.001  0.492±0.004  0.478±0.004  0.433±0.000  0.486±0.002  1.35 / 0.38
+trained@128/h1/rotation                 0.825±0.003  0.181±0.003  0.203±0.003  0.458±0.005  0.230±0.000  0.192±0.002  1.71 / 0.25
+trained@128/h2/rotation                 0.530±0.003  0.473±0.003  0.493±0.005  0.294±0.004  0.279±0.000  0.483±0.004  2.07 / 0.61
+trained@256/h1/rotation                 0.991±0.000  0.013±0.001  0.023±0.001  0.480±0.001  0.220±0.000  0.018±0.001  2.06 / 0.41
+trained@256/h2/rotation                 0.708±0.002  0.292±0.001  0.285±0.003  0.451±0.002  0.095±0.000  0.289±0.001  5.53 / 1.58
+trained@512/h1/rotation                 0.993±0.001  0.012±0.003  0.013±0.002  0.477±0.002  0.241±0.000  0.013±0.002  2.08 / 0.53
+trained@512/h2/rotation                 0.724±0.001  0.276±0.000  0.264±0.001  0.468±0.001  0.041±0.000  0.270±0.001  6.61 / 2.99
+trained@1024/h1/rotation                0.995±0.001  0.010±0.002  0.012±0.002  0.476±0.002  0.250±0.000  0.011±0.002  2.09 / 0.55
+trained@1024/h2/rotation                0.724±0.002  0.275±0.001  0.261±0.001  0.470±0.001  0.022±0.000  0.268±0.001  7.23 / 3.38
+trained@2048/h1/rotation                0.996±0.001  0.011±0.003  0.015±0.003  0.471±0.002  0.247±0.000  0.013±0.003  2.15 / 0.57
+trained@2048/h2/rotation                0.724±0.002  0.273±0.000  0.259±0.001  0.472±0.001  0.016±0.000  0.266±0.000  7.60 / 3.74
+
+Reading. (1) CAE. With the complement scored against A(s; V1 <- V1(b)) its error equals the mapped error up to
+sampling (valid h1: 0.012 vs 0.017; coupling 0.008 vs 0.013; h2 rotation 0.274 vs 0.259; untrained 0.47 vs
+0.53), so the corrected CAE is 1 - IIA to within 0.01: 0.015 for the valid alignment, 0.50 for the untrained
+twin and the manufactured alignment. The archived "0.2 against 0.5" was (0.01 + 0.47)/2 against
+(0.47 + 0.47)/2: the old unmapped error was about 0.47 for every configuration, roughly the share of pairs with
+V2(s) != V2(b). For a one-variable alignment the complement test is an IIA on reversed pairs and adds nothing;
+a test on genuinely unmapped coordinates needs V2 aligned as well. (2) D1. The archived permutation p-value
+(0.0099, the minimum, everywhere) could not fail: repeated bases made the null separation zero, and with
+distinct bases V1 is still a function of the input, so the bichromatic minimum excludes the closest pairs
+(same a, b) in any injective representation. The margin ratios separate networks: nn ratio 1.25-1.38 for
+the untrained twin, the input locus and checkpoints up to step 64; 2.1 at h1 and 7.8 at h2 of the trained
+network, rising at competence onset (step 128: 1.7 / 2.1; step 256: 2.1 / 5.5). Like D2 they are blind to
+the alignment (identical for every configuration on the same network and locus). (3) h2: V1's classes are
+separated with a margin (sep ratio 4.0, the only locus above 1), yet the rotation reaches IIA 0.73 and the
+coupling map 1.00: V1 is present at h2 but not in a linear subspace of the state. The random-direction swap
+changes the output on 1-2% of pairs at h2 and 25% at h1.

@@ -1,0 +1,5 @@
+resid_2 d_V=4: Grassmannian dim 1024; train NLL/target 0.149; Fisher top eigenvalue 0.000225; n(eig > thr*max) {0.1: 5, 0.01: 16, 0.001: 31, 0.0001: 46}; participation ratio 4.6; directions for 90%/99% of trace 7/22; mean per-example grad norm 0.000114
+resid_2 d_V=1: Grassmannian dim 259; train NLL/target 1.875; Fisher top eigenvalue 1.52e+05; n(eig > thr*max) {0.1: 1, 0.01: 4, 0.001: 13, 0.0001: 25}; participation ratio 1.2; directions for 90%/99% of trace 2/9; mean per-example grad norm 2.3
+resid_1 d_V=4: Grassmannian dim 1024; train NLL/target 0.133; Fisher top eigenvalue 304; n(eig > thr*max) {0.1: 1, 0.01: 1, 0.001: 6, 0.0001: 29}; participation ratio 1.1; directions for 90%/99% of trace 1/6; mean per-example grad norm 0.0348
+resid_1 d_V=1: Grassmannian dim 259; train NLL/target 0.641; Fisher top eigenvalue 1.1e+05; n(eig > thr*max) {0.1: 17, 0.01: 43, 0.001: 67, 0.0001: 87}; participation ratio 15.8; directions for 90%/99% of trace 24/49; mean per-example grad norm 6.71
+

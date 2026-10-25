@@ -1,0 +1,29 @@
+Bayes code of the subspace family on InterpBench 18 by Hamiltonian Monte Carlo (jobs 1814015-9,
+2026-10-21; subspace map d_V 4, N(0,1) prior on the frame, 4 chains x 100 samples, 200 warm-up, 20
+leapfrog steps, chains restart at every block (warm_start False); 3 seeds at 1024 targets, 1 seed at 8192 for the two
+subspace loci). Regret against the MAP run's final fit on the same targets (--reference-run;
+case18_hmc_h_a3_vs_map.json, case18_hmc_n8192_h_a3_vs_map.json). Label-only code 1342 bits at 1024.
+
+configuration                      Bayes code (bits, 3 seeds)   slope vs MAP ref   MAP code: gain / slope
+valid resid_2 subspace             1526 / 2370 / 1898           269 +- 43          +1052 bits / 8 +- 3 (single-map MAP run; the mixture run gains +983)
+misspecified resid_1 subspace      1935 / 1949 / 2158           271 +- 10          (slope ~107)
+wrong locus resid_0                2531-2620                    -6 to -8           -
+untrained twin (resid_1/2)         1633 (all seeds)             6                  -
+coupling at resid_2 (trained)      1802 / 1837                  236                (slope 474)
+manufactured (coupling, twin)      2045 (1 seed)                263                (slope 255)
+8192 targets: valid 3707 bits (IIA 1.00, slope vs MAP 161 / 107 on n >= 64 / 512), misspecified 10530
+bits (746 / 1173). HMC acceptance 0.52-0.82 everywhere; final IIA of the sampled predictive 0.98 on two
+valid seeds and 0.48 on the third (posterior not concentrated by n = 1024).
+
+Reading. The genuine Bayes code of the valid alignment is LONGER than the label-only code at 1024
+targets (1526-2370 against 1342 bits) where the plug-in code gains 983 bits, and its regret against
+the plug-in's final fit grows at ~270 per ln n against the plug-in's 8. This is the prediction of the
+Hessian/Fisher analysis (reports/stage1_ioi/curvature_gpt2.txt): the subspace family is regular on its
+1024-dimensional Grassmannian, so a Bayes code must pay for the prior mass of the right 4-plane, of
+order lambda ln n with lambda up to 512, while the plug-in finds the plane along Fisher-free
+directions at no charge. At 8192 targets the Bayes code has concentrated (IIA 1.00, 3707 bits against
+a label-only code of ~10,700) but still trails the plug-in by ~1175 nats. The untrained-twin code at
+1633 bits is the prior predictive (chains never leave the prior: nothing to learn), and the wrong
+locus gains nothing. Conclusion for the plan's Bayes-code line: on alignment families the Bayes
+learning coefficient is real, large, and not the quantity that makes an explanation short; the
+plug-in's kappa = (1/2) tr(F H^-1) is.

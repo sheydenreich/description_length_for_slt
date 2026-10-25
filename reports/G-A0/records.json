@@ -1,0 +1,518 @@
+{
+ "1. Batching factor reproduced (Gaussian mean)": [
+  {
+   "model": "gauss_mean",
+   "learner": "plug-in",
+   "growth": 1.0,
+   "kappa": 0.5,
+   "fitted": 0.5000022427045769,
+   "fitted_stderr": 3.5658996550277077e-09
+  },
+  {
+   "model": "gauss_mean",
+   "learner": "plug-in",
+   "growth": 1.5,
+   "kappa": 0.5,
+   "fitted": 0.6163003447668166,
+   "fitted_stderr": 0.00016140910217231737
+  },
+  {
+   "model": "gauss_mean",
+   "learner": "plug-in",
+   "growth": 2.0,
+   "kappa": 0.5,
+   "fitted": 0.7213475204444815,
+   "fitted_stderr": 4.101753553973995e-17
+  },
+  {
+   "model": "gauss_mean",
+   "learner": "plug-in",
+   "growth": 4.0,
+   "kappa": 0.5,
+   "fitted": 1.0820212806667229,
+   "fitted_stderr": 1.9921669686532912e-16
+  },
+  {
+   "model": "gauss_mean",
+   "learner": "bayes",
+   "growth": 1.0,
+   "kappa": 0.5,
+   "fitted": 0.49999143910760974,
+   "fitted_stderr": 1.3596215838633076e-08
+  },
+  {
+   "model": "gauss_mean",
+   "learner": "bayes",
+   "growth": 2.0,
+   "kappa": 0.5,
+   "fitted": 0.7207677695015062,
+   "fitted_stderr": 0.0001663432816111298
+  }
+ ],
+ "2. Bayes redundancy isolated (per-sample codes of exact germs)": [
+  {
+   "germ": "x^2+y^2",
+   "lambda": 1.0,
+   "m": 1,
+   "fit_plain": {
+    "lam": 0.9999999999999999,
+    "stderr": 2.7078756030382668e-16,
+    "mult_fixed": null,
+    "n_range": [
+     256,
+     16384
+    ]
+   },
+   "fit_fixed_m": {
+    "lam": 0.9999999999999999,
+    "stderr": 2.7078756030382668e-16,
+    "mult_fixed": 1,
+    "n_range": [
+     256,
+     16384
+    ]
+   }
+  },
+  {
+   "germ": "x^2+y^4",
+   "lambda": 0.75,
+   "m": 1,
+   "fit_plain": {
+    "lam": 0.7499999999999997,
+    "stderr": 1.5146093538788227e-16,
+    "mult_fixed": null,
+    "n_range": [
+     256,
+     16384
+    ]
+   },
+   "fit_fixed_m": {
+    "lam": 0.7499999999999997,
+    "stderr": 1.5146093538788227e-16,
+    "mult_fixed": 1,
+    "n_range": [
+     256,
+     16384
+    ]
+   }
+  },
+  {
+   "germ": "x^2y^2",
+   "lambda": 0.5,
+   "m": 2,
+   "fit_plain": {
+    "lam": 0.3943991584398028,
+    "stderr": 0.0030047657801263684,
+    "mult_fixed": null,
+    "n_range": [
+     256,
+     16384
+    ]
+   },
+   "fit_fixed_m": {
+    "lam": 0.5281894657756658,
+    "stderr": 0.0018308453350286342,
+    "mult_fixed": 2,
+    "n_range": [
+     256,
+     16384
+    ]
+   }
+  },
+  {
+   "germ": "(ab-0.5)^2",
+   "lambda": 0.5,
+   "m": 1,
+   "fit_plain": {
+    "lam": 0.5011936009887769,
+    "stderr": 0.0002925926905626139,
+    "mult_fixed": null,
+    "n_range": [
+     256,
+     16384
+    ]
+   },
+   "fit_fixed_m": {
+    "lam": 0.5011936009887769,
+    "stderr": 0.0002925926905626139,
+    "mult_fixed": 1,
+    "n_range": [
+     256,
+     16384
+    ]
+   }
+  }
+ ],
+ "3. Batching isolated (block codes of exact germs)": [
+  {
+   "model": "x^2+y^2",
+   "learner": "bayes",
+   "growth": 1.0,
+   "kappa": 1.0,
+   "fitted": 0.9999999999999999,
+   "fitted_stderr": 1.3312862356420172e-17,
+   "status": "PASS"
+  },
+  {
+   "model": "x^2+y^2",
+   "learner": "bayes",
+   "growth": 2.0,
+   "kappa": 1.0,
+   "fitted": 1.4418754810729688,
+   "fitted_stderr": 0.00019975476694884407,
+   "status": "PASS"
+  },
+  {
+   "model": "x^2+y^2",
+   "learner": "bayes",
+   "growth": 4.0,
+   "kappa": 1.0,
+   "fitted": 2.1622762337714683,
+   "fitted_stderr": 0.0006468398963677208,
+   "status": "PASS"
+  },
+  {
+   "model": "x^2+y^4",
+   "learner": "bayes",
+   "growth": 1.0,
+   "kappa": 0.75,
+   "fitted": 0.7500000000000003,
+   "fitted_stderr": 4.864316629192809e-18,
+   "status": "PASS"
+  },
+  {
+   "model": "x^2+y^4",
+   "learner": "bayes",
+   "growth": 2.0,
+   "kappa": 0.75,
+   "fitted": 1.0814066108054885,
+   "fitted_stderr": 0.00014981607537977785,
+   "status": "PASS"
+  },
+  {
+   "model": "x^2+y^4",
+   "learner": "bayes",
+   "growth": 4.0,
+   "kappa": 0.75,
+   "fitted": 1.6217071753293142,
+   "fitted_stderr": 0.0004851299228110947,
+   "status": "PASS"
+  },
+  {
+   "model": "x^2y^2",
+   "learner": "bayes",
+   "growth": 1.0,
+   "kappa": 0.5,
+   "fitted": 0.40098157055161227,
+   "fitted_stderr": 4.414989280345397e-05,
+   "status": "reported (m = 2)"
+  },
+  {
+   "model": "x^2y^2",
+   "learner": "bayes",
+   "growth": 2.0,
+   "kappa": 0.5,
+   "fitted": 0.5629118681555393,
+   "fitted_stderr": 0.0047374942702045255,
+   "status": "reported (m = 2)"
+  },
+  {
+   "model": "x^2y^2",
+   "learner": "bayes",
+   "growth": 4.0,
+   "kappa": 0.5,
+   "fitted": 0.8344683069872725,
+   "fitted_stderr": 0.012538307864868412,
+   "status": "reported (m = 2)"
+  },
+  {
+   "model": "(ab-0.5)^2",
+   "learner": "bayes",
+   "growth": 1.0,
+   "kappa": 0.5,
+   "fitted": 0.5005939502867167,
+   "fitted_stderr": 3.0495276711410868e-06,
+   "status": "PASS"
+  },
+  {
+   "model": "(ab-0.5)^2",
+   "learner": "bayes",
+   "growth": 2.0,
+   "kappa": 0.5,
+   "fitted": 0.7233259519946367,
+   "fitted_stderr": 0.00048572240884598724,
+   "status": "PASS"
+  },
+  {
+   "model": "(ab-0.5)^2",
+   "learner": "bayes",
+   "growth": 4.0,
+   "kappa": 0.5,
+   "fitted": 1.0863028816544904,
+   "fitted_stderr": 0.0015782606379771864,
+   "status": "PASS"
+  }
+ ],
+ "4. Optimizer effect (plug-in \u03ba against \u03bb)": [
+  {
+   "M": 2,
+   "N": 2,
+   "H": 2,
+   "r": 0,
+   "lam": "3/2",
+   "mult": 1,
+   "kappa_plugin": "2"
+  },
+  {
+   "M": 2,
+   "N": 2,
+   "H": 2,
+   "r": 1,
+   "lam": "2",
+   "mult": 2,
+   "kappa_plugin": "2"
+  },
+  {
+   "M": 2,
+   "N": 2,
+   "H": 2,
+   "r": 2,
+   "lam": "2",
+   "mult": 1,
+   "kappa_plugin": "2"
+  },
+  {
+   "M": 3,
+   "N": 3,
+   "H": 3,
+   "r": 0,
+   "lam": "7/2",
+   "mult": 2,
+   "kappa_plugin": "9/2"
+  },
+  {
+   "M": 3,
+   "N": 3,
+   "H": 3,
+   "r": 1,
+   "lam": "4",
+   "mult": 1,
+   "kappa_plugin": "9/2"
+  },
+  {
+   "M": 3,
+   "N": 3,
+   "H": 3,
+   "r": 2,
+   "lam": "9/2",
+   "mult": 2,
+   "kappa_plugin": "9/2"
+  },
+  {
+   "M": 3,
+   "N": 3,
+   "H": 3,
+   "r": 3,
+   "lam": "9/2",
+   "mult": 1,
+   "kappa_plugin": "9/2"
+  },
+  {
+   "M": 4,
+   "N": 4,
+   "H": 4,
+   "r": 0,
+   "lam": "6",
+   "mult": 1,
+   "kappa_plugin": "8"
+  },
+  {
+   "M": 4,
+   "N": 4,
+   "H": 4,
+   "r": 1,
+   "lam": "7",
+   "mult": 2,
+   "kappa_plugin": "8"
+  },
+  {
+   "M": 4,
+   "N": 4,
+   "H": 4,
+   "r": 2,
+   "lam": "15/2",
+   "mult": 1,
+   "kappa_plugin": "8"
+  },
+  {
+   "M": 4,
+   "N": 4,
+   "H": 4,
+   "r": 3,
+   "lam": "8",
+   "mult": 2,
+   "kappa_plugin": "8"
+  },
+  {
+   "M": 4,
+   "N": 4,
+   "H": 4,
+   "r": 4,
+   "lam": "8",
+   "mult": 1,
+   "kappa_plugin": "8"
+  },
+  {
+   "M": 3,
+   "N": 2,
+   "H": 3,
+   "r": 0,
+   "lam": "5/2",
+   "mult": 1,
+   "kappa_plugin": "3"
+  },
+  {
+   "M": 3,
+   "N": 2,
+   "H": 3,
+   "r": 1,
+   "lam": "3",
+   "mult": 2,
+   "kappa_plugin": "3"
+  },
+  {
+   "M": 3,
+   "N": 2,
+   "H": 3,
+   "r": 2,
+   "lam": "3",
+   "mult": 1,
+   "kappa_plugin": "3"
+  },
+  {
+   "M": 4,
+   "N": 2,
+   "H": 4,
+   "r": 0,
+   "lam": "7/2",
+   "mult": 1,
+   "kappa_plugin": "4"
+  },
+  {
+   "M": 4,
+   "N": 2,
+   "H": 4,
+   "r": 1,
+   "lam": "4",
+   "mult": 2,
+   "kappa_plugin": "4"
+  },
+  {
+   "M": 4,
+   "N": 2,
+   "H": 4,
+   "r": 2,
+   "lam": "4",
+   "mult": 1,
+   "kappa_plugin": "4"
+  }
+ ],
+ "5. Carried-over checks (thermometer, identifiability)": [
+  {
+   "germ": "x^2y^2",
+   "temperature": 0.01,
+   "t_hat": 0.009333559907495072,
+   "lambda_hat": 0.3725935444683718,
+   "lam": 0.5,
+   "plan": [
+    0.93,
+    0.37
+   ]
+  },
+  {
+   "germ": "x^2y^2",
+   "temperature": 0.001,
+   "t_hat": 0.0009671898881541431,
+   "lambda_hat": 0.40041414116647306,
+   "lam": 0.5,
+   "plan": [
+    0.97,
+    0.4
+   ]
+  },
+  {
+   "germ": "x^2y^2",
+   "temperature": 0.0001,
+   "t_hat": 9.804891814701957e-05,
+   "lambda_hat": 0.4186740074143551,
+   "lam": 0.5,
+   "plan": [
+    0.98,
+    0.42
+   ]
+  },
+  {
+   "germ": "x^2+y^4",
+   "temperature": 0.01,
+   "t_hat": 0.010000000000000002,
+   "lambda_hat": 0.7499999999999999,
+   "lam": 0.75
+  },
+  {
+   "germ": "x^2+y^4",
+   "temperature": 0.001,
+   "t_hat": 0.001,
+   "lambda_hat": 0.75,
+   "lam": 0.75
+  },
+  {
+   "germ": "x^2+y^4",
+   "temperature": 0.0001,
+   "t_hat": 0.0001,
+   "lambda_hat": 0.75,
+   "lam": 0.75
+  },
+  {
+   "germ": "x^2+y^2",
+   "temperature": 0.01,
+   "t_hat": 0.010000000000000002,
+   "lambda_hat": 0.9999999999999999,
+   "lam": 1.0
+  },
+  {
+   "germ": "x^2+y^2",
+   "temperature": 0.001,
+   "t_hat": 0.0010000000000000002,
+   "lambda_hat": 0.9999999999999998,
+   "lam": 1.0
+  },
+  {
+   "germ": "x^2+y^2",
+   "temperature": 0.0001,
+   "t_hat": 0.00010000000000000002,
+   "lambda_hat": 0.9999999999999999,
+   "lam": 1.0
+  },
+  {
+   "decades": 1,
+   "n_min": 100.0,
+   "n_max": 1000.0,
+   "points": 21,
+   "vif": 260.0117189398816
+  },
+  {
+   "decades": 2,
+   "n_min": 100.0,
+   "n_max": 10000.0,
+   "points": 41,
+   "vif": 133.7022762703817
+  },
+  {
+   "decades": 3,
+   "n_min": 100.0,
+   "n_max": 100000.0,
+   "points": 61,
+   "vif": 111.65700348327076
+  }
+ ]
+}

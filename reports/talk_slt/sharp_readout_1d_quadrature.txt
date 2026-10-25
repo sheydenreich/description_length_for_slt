@@ -1,0 +1,25 @@
+One-parameter check of the sharp-readout prediction.
+
+Model: P(y = 1 | x) = (1 - eps) sigmoid(s (x - w)) + eps/2 with x ~ N(0, 1), eps = 0.1, true w0 = 0.
+K(w) = E_x KL(p_w0 || p_w). The free energy F_n = -log int exp(-n K(w)) dw on a log-spaced grid in
+|w| (1e-10 .. 3, both signs); its local slope against ln n is the finite-n learning coefficient.
+Prediction: K is quadratic for |w| << 1/s (slope 1/2) and linear for |w| >> 1/s (slope 1), so a
+sharp readout shows a slope near 1 per decision-relevant direction until n resolves the quadratic
+core, then 1/2. For k directions multiply by k: the oracle sharpness sweep (k = 5) should give a
+Bayes slope between 2.5 and 5 at n in [256, 2048]; the MAP code's 14 at x100 would then be a learner
+effect (kappa > lambda).
+
+   s   |  K(1e-3)   K(1e-2)   K(1e-1)   K(1)   | local slope of F_n per ln n, n = 2^4 .. 2^24 (pairs of consecutive n)
+     1 | 8.1e-08  8.1e-06  8.1e-04  7.7e-02 | 0.52 0.51 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50
+    10 | 1.4e-06  1.4e-04  1.3e-02  7.0e-01 | 0.53 0.51 0.51 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50
+   100 | 1.4e-05  1.4e-03  8.0e-02  8.9e-01 | 0.71 0.62 0.56 0.53 0.51 0.51 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50
+  1000 | 1.4e-04  8.0e-03  1.0e-01  9.0e-01 | 0.95 0.90 0.83 0.74 0.64 0.58 0.54 0.52 0.51 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50 0.50
+ 10000 | 7.6e-04  1.0e-02  1.1e-01  9.0e-01 | 1.00 0.99 0.98 0.95 0.91 0.85 0.76 0.68 0.63 0.63 0.61 0.56 0.53 0.51 0.51 0.50 0.50 0.50 0.50 0.50
+
+Reading: the slope is 1/2 throughout for s <= 10; for s = 100 it is 0.7 at n = 16 and reaches 1/2 by
+n = 2^10; for s = 1000 it is 0.95 at n = 16 and 1/2 only beyond 2^14; for s = 10^4 it stays near 1 to
+2^14. The crossover sample size grows with s, here roughly like s^1.3 (about 2^10, 2^14 and 2^19 for
+s = 100, 1000, 10000), slower than the naive s^2 from 'posterior width 1/sqrt(n) below the core width
+1/s' because the linear part of K also steepens with s. Since the sigmoid model is analytic the true
+asymptotic coefficient is 1/2; the value near 1 is a finite-n (scale-dependent) coefficient, which is
+the regime the oracle sweep probes at n <= 2048.

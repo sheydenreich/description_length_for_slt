@@ -1,0 +1,13 @@
+== k-sweep, no channel (test setting), d=12 n=2048
+d=12 k= 1: lambda_eff= 0.50 nominal= 5.50 corrected slope   0.53 +- 0.15; regret at n=2048: 3.3 nats
+d=12 k= 2: lambda_eff= 1.00 nominal= 5.50 corrected slope   1.46 +- 0.38; regret at n=2048: 5.7 nats
+d=12 k= 4: lambda_eff= 2.00 nominal= 5.50 corrected slope   1.94 +- 0.57; regret at n=2048: 8.2 nats
+d=12 k= 7: lambda_eff= 3.50 nominal= 5.50 corrected slope   2.24 +- 0.25; regret at n=2048: 13.1 nats
+d=12 k=11: lambda_eff= 5.50 nominal= 5.50 corrected slope   4.49 +- 0.68; regret at n=2048: 18.3 nats
+== sharpness sweep, d=6 k=5 (lambda 2.5), n=2048
+beta x1, channel none: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   3.39 +- 0.31; regret at n=2048: 9.9 nats
+beta x1, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope  12.00 +- 2.09; regret at n=2048: 32.3 nats
+beta x10, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   0.00 +- 0.00; regret at n=2048: 0.0 nats
+beta x100, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope 1024.61 +- 23.22; regret at n=2048: 2644.1 nats
+beta x1000, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope 1024.61 +- 23.22; regret at n=2048: 2644.1 nats
+

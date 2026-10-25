@@ -1,0 +1,90 @@
+Hessian and Fisher of the learned subspace's loss at its MAP, GPT-2 IOI layer 11 (d_V 16, 12288 frame
+parameters, 1024 targets, prior precision 0.01; job 1813999, 2026-10-20; curvature_gpt2_layer11_full.json).
+Dense Hessian of the mean loss from 12288 Hessian-vector products (math attention backend), exact
+eigendecomposition; empirical Fisher = covariance of the 1024 per-example gradients at the MAP (mean
+gradient norm 1e-2: the MAP of 100 L-BFGS steps is not exactly stationary).
+
+Spectrum: 12032 positive eigenvalues and 256 at zero (slightly negative numerically) = d_V^2, the gauge
+directions W -> W A that leave the span unchanged. The positive part is nearly flat: top 1.04, median
+0.051, minimum 2e-5; 12014 directions above 1% of the top. Every direction that moves the span costs
+loss at a comparable rate: at this point the subspace family is a regular model on the Grassmannian,
+with the nominal coefficient d_V (d - d_V) / 2 = 6016.
+Fisher: trace 15.0 against the Hessian's 683 (2.2%); in the Hessian's eigendirections F_ii / h_i has
+median 0.005, mean 0.012, 10-90% range 0.003-0.011 (0.3-0.6 only in the top dozen directions).
+
+Predicted coefficients: Laplace Bayes (1/2) sum n h / (n h + alpha) = 6016 at every n >= 1024 (all
+directions resolved); plug-in (1/2) tr(F H^-1) = 71, of which 14 from the top 100 directions and 24
+from the top 1000. Measured MAP-code coefficient: 49 +- 2 (n <= 1024), 45 (8192), 37 / 31 / 19
+(32768, three fit ranges).
+
+Reading. (1) The mechanism found on the oracle (hessian_vs_fisher.txt) holds on the language model, a
+hundredfold stronger: the information equality F = H fails in almost every direction, F being about 1%
+of H. Moving the span in a typical direction changes the loss of every target in the same way (a
+deterministic cost), so the empirical minimiser has almost no sampling variance there and the plug-in
+code pays nothing for those directions; it pays (1/2) tr(F H^-1) ~ 70, within a factor 1.5 of the
+measured 45-50 (the formula assumes the exact minimiser and the training-set Fisher; the generalisation
+Fisher on fresh targets is computed next). (2) A Bayes code of this family would pay the full 6016
+ln n: at n = 1024 about 65,000 nats by the Laplace count. [Corrected 2026-10-22: no code of the observed
+law can pay that. Every predictor mixes in the channel, so a target costs at most -ln(eps/K) = 6.46 nats
+(eps 0.05, K 32): at most 6565 nats on 1016 coded targets, 2.2x the label-only code's 2998 nats. The Laplace
+count exceeds this ceiling until n ~ 10^4, i.e. the asymptotic expansion does not apply at n = 1024; the
+statement is that a Bayes code of this family has barely left its prior there, bounded by the ceiling.] The prior mass near the right
+16-plane in a 12032-dimensional Grassmannian is astronomically small, and the Bayes code must pay for
+it; the plug-in finds the plane by gradient descent along directions that carry no noise. This is why
+the Laplace and Langevin "Bayes codes" of October 17-18 collapsed onto the prior and why a Bayes
+complexity charge never appeared: for alignment families on real networks the Bayes learning
+coefficient is the wrong quantity, and the plug-in's kappa = (1/2) tr(F H^-1) is the operative
+complexity. (3) The ordering of explanations under the plug-in code is therefore an ordering by
+Fisher-weighted curvature, not by nominal dimension: the coupling map (1.9 M parameters) has kappa
+~170-225 and the manufactured alignment ~650-990 because their Fisher is large in many more directions
+(every new base/source pair moves their fit). Figure: reports/talk_slt/gpt2_hessian_vs_fisher.png.
+
+Held-out Fisher (job 1814362; per-example gradients on the 1000 i.i.d. evaluation targets at the same
+MAP; curvature_gpt2_layer11_full_heldout_fisher.json): trace 14.0 against the Hessian's 683 (2.0%),
+F/H median 0.007, mean 0.012, 0.16-0.39 in the top dozen directions; plug-in prediction
+(1/2) tr(F H^-1) = 70.6 (training-set Fisher: 71.2). The mean gradient on fresh targets is 0.24 (the
+fit does not generalise perfectly) but the gradient covariance is the same, so the conclusion is not
+an artefact of measuring the Fisher on fitted targets: the generalisation Fisher of the subspace
+family is two per cent of its Hessian, and the plug-in code's complexity is ~70, not 6016.
+
+Across loci and subspace dimensions (array 1817689, 2026-10-20/21; held-out Fisher on the 1000 i.i.d.
+targets, prior precision 0.01, dense Hessians; curvature_gpt2_layer{10,12}_full_heldout_fisher.json,
+curvature_gpt2_layer11_dv4_full_heldout_fisher.json). Measured plug-in coefficients from the MAP-code
+runs with the same settings (regret_slopes_map_code.txt; layers 10 and 12 at d_V 16 and the d_V 64
+Hessian eigendecomposition from job 1820081, filled in 2026-10-22: h_a3_gpt2_map_l10_l12.json, 2 seeds,
+n >= 64; curvature_gpt2_layer11_dv64_full_heldout_fisher.json; d_V 64 negative/zero count 4138 = 4096 gauge + 42).
+
+  locus, d_V    frame params   positive / gauge   top h    F/H (top dozen)   predicted (1/2) tr(F H^-1)   measured kappa
+  L10, 16       12288          12032 / 256         3.2     0.23-0.39          52.5                        65.1 +- 2.9
+  L11, 4         3072           3056 /  16         7.1     0.47-2.1           75.0                        79.0 +- 4.6
+  L11, 16       12288          12032 / 256         1.0     0.16-0.39          70.6                        48.9 +- 1.7
+  L11, 64       49152          45014 / 4138        1.0     0.11-0.64          176.7                       55.9 +- 1.6
+  L12, 16       12288          11328 / 960        24.2     0.29-0.78          111.7                       65.1 +- 0.7
+  (nominal Bayes coefficients d_V (d - d_V) / 2: 1528 at d_V 4, 6016 at 16, 22528 at 64)
+
+Reading. (1) The plug-in prediction is within 1.1x of the measurement at d_V 4 (75 vs 79) and within
+1.45x at d_V 16 (71 vs 49), the same accuracy as on the oracle. (2) The measured coefficient of the valid
+subspace barely moves with the dimension of the family (79, 49, 56 at d_V 4, 16, 64) while the nominal
+Bayes coefficient grows fifteen-fold (1528 to 22528): the plug-in pays for the Fisher-weighted
+directions, whose number is set by the data (how many name directions carry sampling noise), not by
+the parameter count. The learner's code of the valid alignment gains +132 bits at d_V 4 (IIA 0.27: a
+4-plane cannot carry 16 names), +3385 at d_V 16 and +3499 at d_V 64; the family's size is paid for
+by the loss term at d_V 4 and by almost nothing at d_V 64. (3) At layer 12 (the post-norm state) the
+loss is sharper (top eigenvalue 24 against 1) and 960 directions are numerically negative: the final
+norm makes the map's loss non-convex along the radial directions, and the predicted coefficient
+(112) is the largest; the measurement at that locus is pending. (4) The control coefficients scale the
+other way: the manufactured alignment's coefficient is 817 / 988 / 652 and the trained coupling's
+389 / 226 / 160 at d_V 4 / 16 / 64, 3-5x (trained coupling) and 10-20x (manufactured) above the valid subspace at every d_V.
+
+Addendum (2026-10-22, job 1820081 finished): the pending rows are filled in the table above. Measured over
+predicted: L10 1.24, L11 d_V 4 1.05, L11 d_V 16 0.69, L11 d_V 64 0.32, L12 0.58. The plug-in formula gets the
+order of magnitude right where the nominal Bayes coefficient is off by 19x (d_V 4), 90-120x (d_V 16, all three
+loci) and 400x (d_V 64), but it is not quantitatively predictive: the prediction grows with d_V (75 / 71 / 177)
+and across loci (52 / 71 / 112) while the measured coefficient stays at 49-79 everywhere. Reading (1) above
+("same accuracy as on the oracle") holds only for d_V 4 and layer 10. Candidate reasons, not tested: the MAP of
+100 L-BFGS steps is not the exact minimiser (mean held-out gradient norm 0.26 at d_V 64), the Hessian is the
+training-set Hessian of an interpolating fit (1024 targets, 12288-49152 parameters), and the formula is local
+while the regret is accumulated from n = 64. Controls at layers 10 / 12 (same run; the adversary had 400 steps,
+not 4000): trained coupling 196 +- 11 / 404 +- 45, untrained twin 43.0 +- 2.8 / 44.9 +- 2.3, manufactured
+(coupling on the twin, layer 10, 400 steps) 751 +- 2. Gains over label-only (bits): valid L10 +3061, L12 +3269;
+coupling L10 +2562, L12 +1399; manufactured (400 steps) -700.

@@ -1,0 +1,89 @@
+Bayes code of the subspace map on the oracle by Hamiltonian Monte Carlo (array 1813587, 2026-10-20)
+====================================================================================================
+Learner: alignment/hmc.py (Gaussian prior N(0,1) on the raw frame, 4 chains x 100 samples after 200
+warm-up iterations, 10 leapfrog steps, step adapted to 0.7 acceptance, chains continue across blocks).
+Regret against the oracle's own law, geometric blocks r = 1.25 from 16, batching-corrected slope on
+n in [256, 2048], 4 seeds. MAP-code numbers from reports/oracle/readout_sharpness_continuous_v.txt and
+effective_lambda_sweep.json. Per-run JSON in reports/oracle/hmc/.
+
+Sharpness sweep, d = 6, k = 5 readable, continuous V, randomized-response channel 0.1 (lambda_eff 2.5):
+  sharpness    MAP code (kappa)   Bayes code (lambda)   HMC acceptance
+  x1 (none)    1.53 +- 0.50       2.28 +- 0.53          0.64-0.66
+  x1           1.03 +- 0.36       2.40 +- 0.35          0.60-0.72
+  x3           1.26 +- 0.25       2.44 +- 0.32          0.60-0.73
+  x10          2.09 +- 0.56       2.95 +- 0.57          0.69-0.79
+  x30          6.53 +- 0.84       4.41 +- 0.60          0.48-0.75
+  x100         14.21 +- 1.72      5.32 +- 0.59          0.66-0.77
+
+k sweep, d = 12, sharpness x1, channel none (plug-in lambda_eff = k/2; Bayes lambda = k/2 + (11-k)/4,
+the 11-k unreadable directions being quartic; the nominal (d-1)/2 = 5.5 holds only at k = 11; corrected
+2026-10-22, see the note at the end):
+  k    lambda_eff   MAP code (kappa)   Bayes code (lambda)   Bayes lambda (theory)
+  1    0.5          0.53 +- 0.15       1.98 +- 0.26          3.00
+  2    1.0          1.46 +- 0.38       2.88 +- 0.46          3.25
+  4    2.0          1.94 +- 0.57       3.16 +- 0.83          3.75
+  7    3.5          2.24 +- 0.25       3.19 +- 0.41          4.50
+  11   5.5          4.49 +- 0.68       4.72 +- 0.68          5.50
+
+Reading. (1) Sharp readouts: the Bayes coefficient rises from 2.3-2.4 (k/2, the smooth value) to 5.3
+(k, one per decision-relevant direction) between sharpness x1 and x100, exactly the finite-n
+prediction of the 1-D quadrature (reports/talk_slt/sharp_readout_1d_quadrature.txt: slope 1 per
+direction before n ~ s^1.3, 1/2 after). The MAP code's 6.5 and 14.2 at x30 and x100 are therefore the
+learner's own coefficient, not lambda: the plug-in pays two to three times the Bayes code for being at
+the wrong place in a sharp landscape (kappa > lambda, the plan's T4 in the alignment family). Below
+x10 the MAP code pays slightly less than Bayes (1.0-2.1 vs 2.4-3.0).
+(2) Readable directions: the Bayes coefficient does NOT follow k/2. It is 2.0 at k = 1 (lambda_eff
+0.5) and grows to 4.7 at k = 11, while the MAP code follows k/2 (0.53 ... 4.49). The directions of the
+frame outside the data's (k+1)-dimensional subspace are not flat: a frame tilted by phi towards one
+of them swaps cos^2(phi) of V, so the prediction moves at order phi^2 and the KL at order phi^4. They
+are quartic (corrected 2026-10-22; this file first called them "curved"): Fisher and population
+Hessian both vanish there, so the plug-in, whose empirical minimiser sits at zero in them for every
+sample, pays nothing ((1/2) tr(F H^+) = k/2), while the Bayes code pays 1/4 per ln n for each, 1/2
+for each readable one: lambda = k/2 + (11-k)/4 = 3.0, 3.25, 3.75, 4.5, 5.5. At n <= 2048 the
+measured values are below that (finite n; the quartic contribution needs n c phi^4 ~ 1).
+(3) Consequence for the plan's T4: kappa_MAP < lambda on smooth, deterministically constrained
+families, kappa_MAP > lambda on sharp ones, kappa_OLS > lambda on reduced-rank regression; the MAP
+code's slope is a learner coefficient and must be labelled as such. Figure: reports/talk_slt/
+oracle_bayes_vs_map.png.
+
+k sweep at 16384 targets (array 1815759, 2026-10-21; slopes on n in [256, 16384], 4 seeds; reports/oracle/hmc_n16384/):
+  k    lambda_eff   MAP code: n<=2048 -> n<=16384   Bayes code: n<=2048 -> n<=16384   Bayes lambda (theory)
+  1    0.5          0.53 -> 1.14 +- 0.42             1.98 -> 3.35 +- 0.50              3.00
+  2    1.0          1.46 -> 1.39 +- 0.32             2.88 -> 3.05 +- 0.56              3.25
+  4    2.0          1.94 -> 2.37 +- 0.50             3.16 -> 3.46 +- 0.24              3.75
+  7    3.5          2.24 -> 3.73 +- 0.37             3.19 -> 4.44 +- 0.43              4.50
+  11   5.5          4.49 -> 5.32 +- 0.20             4.72 -> 5.43 +- 0.36              5.50
+Reading (corrected 2026-10-22): with eight times the data the Bayes coefficient reaches the asymptotic
+lambda = k/2 + (11-k)/4 at every k, within 0.7 seed s.e. at k = 1, 2, 7, 11 and 1.2 at k = 4 (3.35, 3.05,
+3.46, 4.44, 5.43 against 3.0, 3.25, 3.75, 4.5, 5.5). The first reading of this table ("moves towards the
+nominal 5.5 at every k; the curved but Fisher-free directions are resolved and cost 1/2 ln n each, so
+lambda(n) tends to the Grassmannian dimension / 2") was wrong: the unreadable directions are quartic and
+cost 1/4 each, and the k = 1 value 3.35 is the quartic count 3.0, not a step on the way to 5.5. The
+decisive test is array 1831396 (65536 targets, k = 1, 4, 7, slopes on n >= 1024; prediction 3.0, 3.75,
+4.5 against 5.5 under the old reading). The plug-in coefficient stays near (1/2) tr(F H^+): 1.14 at k = 1
+is the predicted 1.1 (the weakly curved second readable direction, h = 0.064, is resolved at this n), and
+the k = 7 and 11 values (3.7, 5.3) are the readable count / 2 within error. Figure:
+reports/talk_slt/oracle_kappa_vs_lambda.png.
+
+Sharpness sweep at 16384 targets (array 1817688, 2026-10-21; slopes on n in [256, 16384], 4 seeds; reports/oracle/sharp_n16384/):
+  sharpness   MAP code: n<=2048 -> n<=16384   Bayes code: n<=2048 -> n<=16384
+  x1          1.03 -> 1.20 +- 0.05             2.40 -> 2.51 +- 0.08
+  x10         2.09 -> 2.00 +- 0.39             2.95 -> 3.03 +- 0.31
+  x30         6.53 -> 2.99 +- 0.57             4.41 -> 3.41 +- 0.40
+  x100        14.21 -> 10.34 +- 4.49           5.32 -> 3.55 +- 0.47
+Reading: with the larger range the Bayes coefficient at x100 falls from 5.3 (one per direction) back towards
+k/2 (3.55, still above 2.5), and at x1 it is 2.51 +- 0.08, k/2 to the second decimal: the sharp-readout excess
+of the Bayes code is the finite-n crossover of the 1-D quadrature, resolved once n exceeds roughly s^1.3. The
+MAP code's coefficient at x100 stays large (10.3 +- 4.5, with seed-to-seed spread of the same size): in a sharp
+landscape the plug-in's excess is a learner effect that does not go away with n. Figure:
+reports/talk_slt/oracle_sharpness_vs_n.png.
+
+Correction (2026-10-22, review item 1.8). The d - 1 - k unreadable directions of the oracle were called
+"exactly flat" (testbed docstring, write-up) and "curved but Fisher-free" (readings above). Both are wrong.
+Tilting the d_V = 1 frame u by phi towards an unreadable coordinate e: the data have no e-component, so
+u . (h_s - h_b) = cos(phi) dv and the readout sees v_b + cos^2(phi) dv. The prediction changes at order
+phi^2 and the KL at order phi^4 (checked numerically: doubling phi multiplies the KL by 16.3-16.4 towards
+e and by 4.0 towards a readable coordinate; tests/test_oracle_directions.py). A quartic direction has
+learning coefficient 1/4, so the Bayes lambda of the oracle is k/2 + (d - 1 - k)/4, with multiplicity 1;
+the plug-in's (1/2) tr(F H^+) = k/2 is unchanged. The sharpness sweep (d = 6, k = 5 = d - 1) has no
+unreadable direction and is unaffected. The sweep records now carry "lambda_bayes".

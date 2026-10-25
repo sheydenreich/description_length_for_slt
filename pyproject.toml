@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bitsev"
+version = "0.0.1"
+description = "Bits of Evidence: prequential code lengths, exact singular models, and alignment sample efficiency"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Sven Heydenreich" }]
+# Layer 1 (bitsev.codes, bitsev.exact) depends only on numpy and scipy so that
+# the code-length library can be released and tested on CPU nodes without torch.
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Layer 2+ (alignment, baselines, testbeds) needs torch and tabular I/O.
+ml = ["torch>=2.2", "pandas>=2.0", "pyarrow>=14"]
+# Interpretability testbeds (InterpBench, MIB) and the DAS reference implementation.
+interp = ["transformer_lens>=2.0", "pyvene>=0.1.2", "huggingface_hub>=0.20"]
+# D3 diagnostics: Rips persistence and bottleneck distances.
+topo = ["gudhi>=3.13"]
+dev = ["pytest>=8", "pytest-xdist>=3", "ruff>=0.5", "matplotlib>=3.8"]
+
+[project.scripts]
+bitsev-check-env = "bitsev.cli:check_env"
+bitsev-exact = "bitsev.experiments.run_exact:main"
+bitsev-stage1-toy = "bitsev.experiments.run_stage1_toy:main"
+bitsev-stage1-figures = "bitsev.report.figures:main"
+bitsev-h-a3 = "bitsev.experiments.h_a3:main"
+bitsev-stage1-interpbench = "bitsev.experiments.run_stage1_interpbench:main"
+bitsev-stage1-ioi = "bitsev.experiments.run_stage1_ioi:main"
+bitsev-rrr-codes = "bitsev.experiments.rrr_codes:main"
+bitsev-ib-curvature = "bitsev.experiments.ib_curvature:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "NPY"]

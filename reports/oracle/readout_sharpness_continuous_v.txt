@@ -1,0 +1,6 @@
+continuous V, beta x1, channel none: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   1.53 +- 0.50; regret at n=2048: 10.0 nats
+continuous V, beta x1, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   1.03 +- 0.36; regret at n=2048: 7.2 nats
+continuous V, beta x3, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   1.26 +- 0.25; regret at n=2048: 9.2 nats
+continuous V, beta x10, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   2.09 +- 0.56; regret at n=2048: 20.4 nats
+continuous V, beta x30, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   6.53 +- 0.84; regret at n=2048: 38.6 nats
+continuous V, beta x100, channel rr: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope  14.21 +- 1.72; regret at n=2048: 113.6 nats

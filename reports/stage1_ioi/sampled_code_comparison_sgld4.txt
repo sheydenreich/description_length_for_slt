@@ -1,0 +1,13 @@
+== sampled code (SGLD step 1e-4, scale-relative, cold start)
+valid layer 11 subspace                                    gain over label-only   3349.9 ±   6.6 (n=3, per seed [3361, 3350, 3338]) IIA 0.99 loss 0.52 ECE 0.13
+  untrained-twin control                                   gain over label-only     38.4 ±   7.2 (n=3, per seed [51, 26, 39]) IIA 0.23 loss 2.88 ECE 0.08
+  wrong-locus control                                      gain over label-only  -3517.9 ±   0.0 (n=3, per seed [-3518, -3518, -3518]) IIA 0.07 loss 5.36 ECE 0.76
+  coupling-map control                                     gain over label-only   2460.2 ±  15.8 (n=3, per seed [2464, 2485, 2431]) IIA 0.96 loss 0.51 ECE 0.02
+adversary: coupling on twin 7 at layer 10                  gain over label-only  -1985.0 ± 601.8 (n=3, per seed [-2784, -2365, -806]) IIA 0.83 loss 1.08 ECE 0.11
+adversary: coupling on twin 8 at layer 10                  gain over label-only  -1776.6 ± 553.7 (n=3, per seed [-999, -1482, -2848]) IIA 0.77 loss 1.32 ECE 0.15
+== plug-in code (for comparison)
+valid layer 11 subspace                                    gain over label-only   3301.7 ±   3.0 (n=5, per seed [3293, 3302, 3300, 3301, 3312]) IIA 0.99 loss 0.50 ECE 0.13
+adversary twin 7 layer 10                                  gain over label-only    704.2 ±  62.6 (n=3, per seed [780, 580, 752]) IIA 0.86 loss 0.87 ECE 0.08
+adversary twin 8 layer 10                                  gain over label-only    355.1 ± 142.1 (n=3, per seed [79, 550, 436]) IIA 0.83 loss 0.95 ECE 0.05
+adversary twin 7 minus twin 8 under the sampled code: -208.5 ± 1155.1, per seed [-1785, -883, 2042]
+

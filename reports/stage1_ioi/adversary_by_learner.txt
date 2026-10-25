@@ -1,0 +1,8 @@
+GPT-2, manufactured alignment (coupling 512x4 on the untrained twin, layer 10, 4000 steps), gain over label-only (4324.5 bits), 3 seeds
+
+plug-in mixture of 4 (canonical learner)      704.2 ±  62.6 bits, per seed [780, 580, 752], IIA 0.86, log loss 0.87, bits/target per block [6.6, 5.8, 5.1, 4.8, 4.4, 4.3, 2.6]
+plug-in, one member                         -1084.6 ± 319.3 bits, per seed [-1723, -762, -768], IIA 0.58, log loss 1.65, bits/target per block [6.8, 6.3, 6.3, 6.9, 6.1, 6.4, 4.3]
+MAP only (AdamW, cold start)                -1985.5 ± 602.2 bits, per seed [-2786, -2365, -806], IIA 0.83, log loss 1.08, bits/target per block [6.9, 6.7, 7.3, 7.2, 6.9, 6.7, 5.6]
+MAP + Langevin, MAP-scale step 1e-4         -1947.5 ± 589.9 bits, per seed [-2715, -2339, -788], IIA 0.83, log loss 1.08, bits/target per block [6.9, 6.7, 7.2, 7.2, 6.8, 6.7, 5.5]
+
+valid layer-11 subspace for reference: mixture +3302 ± 3 (5 seeds); MAP only +3385 ± 5; MAP + Langevin (init-scale) +3350 ± 7.

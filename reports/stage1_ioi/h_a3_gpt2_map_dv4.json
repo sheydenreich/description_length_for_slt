@@ -1,0 +1,70 @@
+{
+ "lambda": null,
+ "n_min": 64,
+ "rows": [
+  {
+   "configuration": "trained/layer0/subspace",
+   "seeds": 2,
+   "corrected_slope": 1.964829862117763e-05,
+   "seed_se": 3.395900130271908e-05,
+   "fit_se": 3.2511172285988916e-05,
+   "final_regret_nats": 0.00023350119590759277
+  },
+  {
+   "configuration": "trained/layer0/subspace/map=coupling",
+   "seeds": 2,
+   "corrected_slope": 12.328110057115543,
+   "seed_se": 1.322024339437484,
+   "fit_se": 2.3691278128050723,
+   "final_regret_nats": 81.05838537216187
+  },
+  {
+   "configuration": "trained/layer0/subspace/untrained",
+   "seeds": 2,
+   "corrected_slope": 7.116794586181633e-06,
+   "seed_se": 1.1694431304931621e-05,
+   "fit_se": 1.5868758829473458e-06,
+   "final_regret_nats": 3.1888484954833984e-05
+  },
+  {
+   "configuration": "trained/layer11/subspace",
+   "seeds": 2,
+   "corrected_slope": 78.98176575787355,
+   "seed_se": 4.616143443807957,
+   "fit_se": 16.201085012540847,
+   "final_regret_nats": 354.1256809271872
+  },
+  {
+   "configuration": "trained/layer11/subspace/locus=layer0",
+   "seeds": 2,
+   "corrected_slope": 1.964829862117763e-05,
+   "seed_se": 3.395900130271908e-05,
+   "fit_se": 3.2511172285988916e-05,
+   "final_regret_nats": 0.00023350119590759277
+  },
+  {
+   "configuration": "trained/layer11/subspace/map=coupling",
+   "seeds": 2,
+   "corrected_slope": 389.2977672303091,
+   "seed_se": 12.234548266790766,
+   "fit_se": 32.47915823933874,
+   "final_regret_nats": 1751.449006255716
+  },
+  {
+   "configuration": "trained/layer11/subspace/untrained",
+   "seeds": 2,
+   "corrected_slope": 26.729689174890478,
+   "seed_se": 0.3304050028324141,
+   "fit_se": 6.689139408746228,
+   "final_regret_nats": 119.04087662696838
+  },
+  {
+   "configuration": "untrained/layer10/coupling",
+   "seeds": 2,
+   "corrected_slope": 816.7168438388023,
+   "seed_se": 16.27279033754013,
+   "fit_se": 178.52747626813573,
+   "final_regret_nats": 3585.232713116333
+  }
+ ]
+}

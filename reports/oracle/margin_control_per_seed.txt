@@ -1,0 +1,11 @@
+beta x10, margin 0.3: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   4.56 +- 1.37; regret at n=2048: 23.4 nats
+beta x10, margin 0.3:    per seed: slopes [1.37, 9.56, 3.94, 7.21, 4.45, 0.8], final regret [19.2, 24.6, 25.4, 25.0, 36.6, 9.4]
+beta x10, margin 1.0: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   1.93 +- 1.89; regret at n=2048: 3.9 nats
+beta x10, margin 1.0:    per seed: slopes [0.21, -0.0, 11.37, 0.0, 0.0, 0.0], final regret [0.7, 2.7, 19.8, 0.0, 0.0, 0.0]
+beta x30, margin 0.3: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   2.70 +- 1.24; regret at n=2048: 34.5 nats
+beta x30, margin 0.3:    per seed: slopes [0.0, 0.0, 6.72, 5.0, 4.47, 0.0], final regret [32.0, 0.4, 35.3, 49.9, 82.5, 7.0]
+beta x30, margin 1.0: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope 519.41 +- 230.92; regret at n=2048: 1361.8 nats
+beta x30, margin 1.0:    per seed: slopes [1017.1, 3.24, 1012.78, 0.0, 7.15, 1076.18], final regret [2688.3, 5.8, 2708.9, 14.7, 23.6, 2729.5]
+beta x30, channel rr, margin 0: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   6.53 +- 0.84; regret at n=2048: 38.6 nats
+beta x30, channel rr, margin 0.3: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope   2.93 +- 1.73; regret at n=2048: 29.4 nats
+beta x30, channel rr, margin 1.0: d=6 k= 5: lambda_eff= 2.50 nominal= 2.50 corrected slope 508.28 +- 292.52; regret at n=2048: 1354.4 nats

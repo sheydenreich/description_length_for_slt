@@ -1,0 +1,44 @@
+GPT-2 IOI, single-map MAP code to 131072 targets, 3 seeds per arm (2026-10-23). Four arms: readout as is /
+one learned temperature per predictor (--temperature), each with the fixed budget (400 Adam steps per block;
+results/stage1_ioi_gpt2_map_n131072{,_temp}, jobs 1830349/50, 1842451-4) and with the steps raised to 10 passes
+over the prefix (--min-epochs 10; results/stage1_ioi_gpt2_map_n131072_ep10{,_temp}, jobs 1842510/2/4/6/8/20).
+Splits: gain_decomposition_gpt2_n131072{,_temp,_ep10,_ep10_temp}.json. Figure: talk_slt/gain_large_n.png
+(10-epoch arms). The 10-epoch rule changes nothing below 10240 targets.
+
+Gain at block ends 4096 ... 131072, bits, mean of 3 seeds (± s.e. at 131072):
+  valid subspace vs manufactured alignment (coupling on the twin, layer 10)
+    as is            6098 7243 8323 8376 8584 6760 ± 1962     10 epochs  6098 7243 8323 8343 8275 5900 ± 2066
+    tempered         6181 7352 8840 9795 10106 9764 ± 936     10 epochs  6181 7352 8840 9896 9921 9062 ± 1051
+  valid subspace vs coupling map on the trained network
+    as is             933  881  640 −304 −1948 −5560 ± 276    10 epochs   933  881  640 −331 −2311 −6920 ± 212
+    tempered         1012 1168 1203 1081 1020  216 ± 347      10 epochs  1012 1168 1203 1365  615 −819 ± 917
+  coupling on the trained network vs manufactured alignment (same family, 1,869,440 parameters each)
+    as is            5165 6361 7683 8680 10532 12320 ± 2007   10 epochs  5165 6361 7683 8674 10586 12820 ± 2200
+    tempered         5169 6184 7637 8714 9085 9549 ± 682      10 epochs  5169 6184 7637 8531 9306 9881 ± 1129
+
+Block rate above the channel floor (nats/target), 10 epochs, blocks ending 16384 / 32768 / 65536 / 131072:
+  as is     valid 0.054 0.052 0.053 0.058   manufactured 0.145 0.052 0.051 0.033   coupling 0.034 0.011 0.011 0.009
+            (seed means; the as-is valid subspace stays ~0.055 above the floor: GPT-2's under-confidence)
+  tempered  valid 0.021 0.010 0.023 0.024   manufactured 0.146 0.054 0.024 0.015   coupling 0.024 0.017 0.007 0.009
+
+Reading.
+(1) The fixed budget was not the cause of the late behaviour: 10 passes per block reproduce every curve within
+the seed errors.
+(2) Readout as is, the calibration deficit of the valid subspace (≈ 0.05 nats per target) is a falsification
+term that grows linearly: against the manufactured alignment the gain peaks near 32768-65536 (≈ 8.3k bits) and
+falls to 5.9-6.8k by 131072 (crossing zero by extrapolation at a few 10^5); the trained coupling wins by
+5.6-6.9k bits.
+(3) Tempered, the margin against the manufactured alignment plateaus at 9-10k bits from 32768 on, no crossover
+by 131072; against the trained coupling it is a tie within noise. The plateau means the regret difference no
+longer grows like Δκ ln n here (≈ 1100 bits per doubling expected from κ 826 vs 42, 784 nats per ln n times the
+batching factor 1.44 times ln 2): the valid subspace's
+tempered block rate wobbles between 0.010 and 0.024 above the floor and its held-out final fits sit at
+0.057-0.072, i.e. constant-rate Adam leaves an excess loss of order 0.01 nats per target, ≈ 900 bits per 65k
+block, comparable to the κ growth. Beyond ~32768 targets this learner's optimisation noise, not its learning
+coefficient, sets the per-target excess loss.
+(4) The coupling pair keeps separating: +12.8k (as is) and +9.9k (tempered) at 131072. At large n part of it is
+fit: the manufactured alignment's block rate stays above the trained coupling's (0.033 vs 0.009 as is).
+(5) The fit/regret split is not reliable at 131072 even with 10 epochs: in several seeds the final fit codes the
+last block worse in-sample than the block predictor did out of sample (e.g. manufactured, seed 1: 0.082 vs
+0.033). A converged final fit needs a decaying learning rate or an L-BFGS polish, not more steps.
+For the talk: quote the split at 32768 (3 seeds, slides 14-15) and these gains as the large-n caveat.

@@ -1,0 +1,78 @@
+{
+ "lambda": 129.5,
+ "n_min": 64,
+ "rows": [
+  {
+   "configuration": "trained/resid_1/subspace",
+   "seeds": 3,
+   "corrected_slope": 133.10429381355638,
+   "seed_se": 38.40236631083872,
+   "fit_se": 14.022785461408805,
+   "final_regret_nats": 600.8663577822348
+  },
+  {
+   "configuration": "trained/resid_1/subspace/locus=resid_0",
+   "seeds": 3,
+   "corrected_slope": 47.949101481089976,
+   "seed_se": 5.937117737597773,
+   "fit_se": 3.032009043815141,
+   "final_regret_nats": 213.02001115928093
+  },
+  {
+   "configuration": "trained/resid_1/subspace/map=coupling",
+   "seeds": 3,
+   "corrected_slope": -53.597850824644134,
+   "seed_se": 57.25224714552363,
+   "fit_se": 25.23292614499225,
+   "final_regret_nats": -209.78956611206135
+  },
+  {
+   "configuration": "trained/resid_1/subspace/untrained",
+   "seeds": 3,
+   "corrected_slope": 3.9603100895881638,
+   "seed_se": 0.0005257759646233062,
+   "fit_se": 1.0830483337560401,
+   "final_regret_nats": 17.65677148103714
+  },
+  {
+   "configuration": "trained/resid_2/subspace",
+   "seeds": 3,
+   "corrected_slope": 11.719172296176357,
+   "seed_se": 1.0785696412937738,
+   "fit_se": 3.78973606444473,
+   "final_regret_nats": 148.13581126804152
+  },
+  {
+   "configuration": "trained/resid_2/subspace/locus=resid_0",
+   "seeds": 3,
+   "corrected_slope": 47.949101481089976,
+   "seed_se": 5.937117737597773,
+   "fit_se": 3.032009043815141,
+   "final_regret_nats": 213.02001115928093
+  },
+  {
+   "configuration": "trained/resid_2/subspace/map=coupling",
+   "seeds": 3,
+   "corrected_slope": 232.12340774014586,
+   "seed_se": 113.6882158584305,
+   "fit_se": 67.48665746932036,
+   "final_regret_nats": 1043.0279101394117
+  },
+  {
+   "configuration": "trained/resid_2/subspace/untrained",
+   "seeds": 3,
+   "corrected_slope": 3.939536869525908,
+   "seed_se": 0.0014110262371918325,
+   "fit_se": 1.0575118242255135,
+   "final_regret_nats": 17.622679551442463
+  },
+  {
+   "configuration": "untrained/resid_2/coupling",
+   "seeds": 3,
+   "corrected_slope": 242.78628383651372,
+   "seed_se": 21.956092344041082,
+   "fit_se": 52.89497387364664,
+   "final_regret_nats": 1054.7087286586564
+  }
+ ]
+}

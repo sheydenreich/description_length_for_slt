@@ -1,0 +1,38 @@
+Genuine Bayes code of the rotation family on hierarchical equality by Hamiltonian Monte Carlo (jobs
+1813700 + 1815596, EPYC; 5 seeds, 1024 targets, d_V 4, hidden width 32, N(0,1) prior; 4 chains x 100
+samples, 200 warm-up, 20 leapfrog steps, step 0.01; chains restart at every block, warm_start False as on InterpBench). Summary
+summary_dv4_hmc.md; regret slopes h_a3_hmc.json (against the sampled predictive's own final fit). The
+plug-in comparison is the mixture-of-4 run summary_dv4_mix4_rr.md on the same targets (label-only
+1021.1 bits for both). Gains over label-only in bits, mean +- s.e. over 5 seeds (IIA i.i.d.).
+
+configuration                       Bayes code (HMC)      plug-in (mixture-of-4)
+valid h1 rotation                   +733.0 +- 0.8 (1.00)  +505.5 +- 19.3 (1.00)
+misspecified h2 rotation             +80.7 +- 43.1 (0.68)  -404.9 +- 2.2 (0.68)
+wrong locus (input)                  -76.3 +- 47.5 (0.72)  -745.5 +- 32.7 (0.6)
+untrained twin h1 / h2               -13.8 / -14.2 (0.5)   -9.1 / -13.9 (0.5)
+coupling at h1, trained network     -322.2 +- 36.0 (0.5)  +586.5 +- 6.2 (1.00)
+manufactured (coupling, twin, h2)   -380.9 +- 34.6 (0.5)  -570.9 +- 19.8 (0.5)
+gains vs controls, valid h1: twin +747 +- 1, coupling +1055 +- 35, wrong locus +809 +- 47 (all 5 seeds
+reject at alpha 0.01 by n = 35-75).
+Regret slopes of the Bayes code (per ln n, n >= 64): valid h1 12.9 +- 0.1 (nominal Grassmannian
+coefficient 4 x 28 / 2 = 56), coupling at h1 22.8 +- 7.7, wrong locus 58.5 +- 15.3, twin 0.17.
+Training trajectory (valid h1, Bayes code): +184 bits at checkpoint 128, +697 at 256, +730 at 1024
+(plug-in: +227, +644, +580).
+
+Reading. (1) Here the Bayes code is the shorter one: 230 bits shorter than the plug-in for the valid
+alignment, because the posterior predictive hedges where the single map overfits the early blocks, and
+the complexity it must pay (regret 88 nats at 1024, slope 13, a quarter of the nominal 56) is small
+against the 1000-target loss gain. (2) The Bayes code charges the coupling family what the plug-in does
+not: the same family that gains 586 bits as a plug-in loses 322 bits as a Bayes code, because the prior
+mass of the faithful coupling maps is tiny (the posterior has not concentrated after 1024 targets and
+the predictive stays near the prior, IIA 0.5). The valid rotation alignment therefore beats the coupling
+by 1055 bits under the Bayes code, whereas under the plug-in the coupling is 81 bits shorter: the Bayes code's ordering of
+families is by learning coefficient, as the plan's T4 intends. (3) The misspecified locus h2 moves from
+-405 (plug-in) to +81 (Bayes): the hedged predictive is better than label-only on the 68% of targets it
+gets right and does not pay the plug-in's overconfident losses. (4) Together with InterpBench (width
+260, nominal 512: Bayes code longer than label-only at 1024 targets, case18_bayes_code_hmc.txt) and
+GPT-2 (width 768, nominal 6016: a Bayes code would cost ~65,000 nats, curvature_gpt2.txt), the three
+testbeds give the ladder in n versus lambda: the Bayes code is the right instrument when lambda ln n is
+small against the loss gain (toy), becomes uncompetitive at a few hundred (InterpBench at 1024, usable
+at 8192) and unusable at thousands; the plug-in code's coefficient (1/2) tr(F H^-1) stays at tens
+everywhere, which is why the plug-in is the operative Stage 1 code.

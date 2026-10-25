@@ -1,0 +1,195 @@
+% ======================================================================
+% Addition: the Jacobian lens as a parameter-free alignment (version 7.3).
+% BLOCK 1 is the new subsection of the appendix "Topological and metric
+% certificates"; paste it before its subsection "Numerical checks".
+% BLOCKS 2-9 are one-line hooks and bibitems; build_v73.py inserts all of
+% them, or paste by hand at the places named in each header.
+% ======================================================================
+
+% ----------------------------------------------------------------------
+% BLOCK 1: new subsection, before \subsection{Numerical checks} of Appendix D.
+% ----------------------------------------------------------------------
+\subsection{The Jacobian lens as a parameter-free alignment}
+\label{app:topo-jlens}
+
+\LAssess{} The Jacobian lens of \cite{gurnee2026workspace} reads a
+mid-layer state through the network's own averaged Jacobian. It was built to
+study verbalizable content, but its coordinate swap is a distributed
+interchange intervention whose subspace is given analytically rather than
+learned. That makes it an alignment family with no fitted parameters beyond
+a layer band and a sparsity level, and therefore the floor of the complexity
+ladder in the decision experiment, below the identity map only in that it
+uses a basis supplied by the network's Jacobian instead of its neurons. The
+construction is tied to vocabulary tokens, so it applies to variables whose
+values are tokens, such as names or days, and to other variables only
+through a token proxy. Its originators call it an imperfect tool, and
+commentators have noted an omitted logit-lens comparison, a low
+signal-to-noise ratio and the misleading name: the ``J-space'' is a union
+of cones, not a subspace.
+
+\paragraph{Construction.} For layer $\ell$, $J_\ell=\E\bigl[\partial
+h_{L,t'}/\partial h_{\ell,t}\bigr]$ is the Jacobian of the final-layer
+state at later positions $t'\ge t$ with respect to the layer-$\ell$ state,
+averaged over positions and about a thousand prompts. The J-vector of token
+$w$ is the row $v_w=(W_UJ_\ell)_w$, the average direction at layer $\ell$
+that makes $w$ more likely later. The J-space at sparsity $k$ is the set of
+nonnegative combinations of at most $k$ J-vectors, fitted by gradient
+pursuit; its component carries about 6--15\% of activation variance, so most
+of the geometry studied in Appendices~\ref{app:topo-stretch}
+and~\ref{app:topo-real} lives in its complement. For a variable $V$ with
+token values $w_1,\dots,w_m$, let $V_J=[v_{w_1},\dots,v_{w_m}]$ with columns
+normalized to unit length and $Q$ an orthonormal basis of the orthogonal
+complement of its span. The J-lens alignment is the linear bijection
+\begin{equation}
+\phi_J(h)=\bigl(V_J^{+}h,\ Q^{\!\top}h\bigr),\qquad
+\phi_J^{-1}(c,u)=V_Jc+Qu,
+\label{eq:topo-jlens}
+\end{equation}
+whose interchange intervention \eqref{eq:topo-interv} transplants the
+J-coordinates of the source into the base and leaves the complement of the
+base untouched. The in-place swap of \cite{gurnee2026workspace} is the
+special case that exchanges two coordinates of one state.
+
+\begin{keybox}{Distortion of the J-lens alignment (internal calculation).}
+Let $\sigma_{\max}\ge\sigma_{\min}>0$ be the extreme singular values of
+$V_J$. Then
+\begin{equation}
+\Lip(\phi_J)=\max\Bigl(\frac1{\sigma_{\min}},1\Bigr),\qquad
+\Lip(\phi_J^{-1})=\max(\sigma_{\max},1),\qquad
+\Dist(\phi_J)=\frac{\sigma_{\max}}{\sigma_{\min}}=\operatorname{cond}(V_J),
+\label{eq:topo-jlens-dist}
+\end{equation}
+the last equality because unit columns give $\sigma_{\max}\ge1\ge\sigma_{\min}$.
+For two values whose J-vectors meet at angle $\theta\le\pi/2$,
+$\Dist(\phi_J)=\cot(\theta/2)$. The in-place swap of two J-vectors of equal
+norm is a reflection of their plane and hence an isometry.
+\end{keybox}
+
+\noindent\emph{Proof.} For $h=h_\parallel+h_\perp$ split along
+$\operatorname{span}V_J$ and its complement,
+$\|\phi_J(h)\|^2=\|V_J^+h_\parallel\|^2+\|h_\perp\|^2$ and
+$\|\phi_J^{-1}(c,u)\|^2=\|V_Jc\|^2+\|u\|^2$, since $V_Jc\perp Qu$; the
+suprema are attained on the top and bottom singular directions. Two unit
+columns at angle $\theta$ have $\sigma^2=1\pm\cos\theta$. The swap fixes
+$v_s+v_t$ and negates $v_s-v_t$, which are orthogonal when the norms are
+equal. $\square$
+
+\LNum{} The three identities hold exactly on 30 random bases, 12 angles
+and 24 swap configurations (Appendix~\ref{app:topo-checks}).
+
+\paragraph{Consequences for the certificates.} \LCalc{} Because
+$\Dist(\phi_J)$ is a property of the network alone, the stretch budget
+\eqref{eq:topo-sep} becomes a statement about the network:
+$\operatorname{cond}(V_J)\,\Lambda\ge\gamma/\sep_V$. If the J-vectors of the
+values of $V$ are well separated, the alignment has no stretch to offer and
+must succeed or fail on the network's own separation and sensitivity. The
+map is also the mean-field version of the sensitivity term: $W_UJ_\ell$ is
+the average of $Dg$ over natural states, so the segment sensitivity
+$\Lambda_{b,s,s'}$ of \eqref{eq:topo-budget} splits into the part predicted
+by the averaged Jacobian and a residual. Writing $\Delta=h'(b,s)-h'(b,s')$
+and $\delta$ for the actual logit difference, the \emph{Jacobian
+consistency}
+\begin{equation}
+\mathrm{JC}_{b,s,s'}=\frac{\|\delta-W_UJ_\ell\Delta\|}{\|\delta\|}
+\label{eq:topo-jc}
+\end{equation}
+is small when the intervention acts through the directions the downstream
+computation uses on average, and large when it relies on local sensitivity
+that the average does not show. The latter is what a manufactured alignment
+paying its budget through off-manifold sensitivity must do. Two cautions
+remain. A J-vector is a direction that \emph{would} change the output, not
+one the model demonstrably uses; this is the setting of the interpretability
+illusion of \cite{makelov2024}, so the realizability statistics D3 are the
+right complement. And the J-lens cannot route information across positions;
+on a task that requires it, a low score reflects the locus, not the
+variable.
+
+\begin{hypbox}{H-A10 (the J-lens rival).}
+On token-valued variables in the decision experiment, the J-lens alignment
+reaches an interchange-intervention accuracy within the margin of the best
+rotation at loci where the value is verbalizable, at zero parametric cost,
+and $\operatorname{cond}(V_J)$ stays below a small constant. On untrained
+networks it fails for copied variables such as the indirect-object name,
+where learned reversible maps succeed, because it has no freedom to route.
+Manufactured alignments that pass held-out IIA show Jacobian consistency
+\eqref{eq:topo-jc} well above that of valid ones on the same pairs.
+\end{hypbox}
+
+% ----------------------------------------------------------------------
+% BLOCK 2: row for the table in the subsection "Numerical checks" of
+% Appendix D, before \bottomrule.
+% ----------------------------------------------------------------------
+\addlinespace
+Distortion of the J-lens alignment \eqref{eq:topo-jlens-dist}, the
+$\cot(\theta/2)$ law, and the swap isometry.
+\newline\texttt{topo\_jlens\_check.py}
+& Exact on 30 random bases ($d=12$, $m=3$), 12 angles and 24 swap
+configurations; sampled Lipschitz constants never exceed the predicted
+values; the swap is an isometry exactly when the two norms are equal. \\
+
+% ----------------------------------------------------------------------
+% BLOCK 3: in the keybox "Proof target T7" of Appendix D, before \end{description}.
+% ----------------------------------------------------------------------
+\item[T7f, J-lens distortion.] Status: proved
+(Appendix~\ref{app:topo-jlens}); the Jacobian-consistency statistic is a
+proposed diagnostic without a guarantee.
+
+% ----------------------------------------------------------------------
+% BLOCK 4: in Appendix D, subsection "Diagnostics, hypotheses and proof
+% target", at the end of item D2 (after "is reported alongside.").
+% ----------------------------------------------------------------------
+The Jacobian consistency \eqref{eq:topo-jc} of each pair is reported with
+them.
+
+% ----------------------------------------------------------------------
+% BLOCK 5: in Section 3.4, after the sentence "The metric diagnostics
+% D1--D3 of Appendix~\ref{app:topo} are computed for every alignment."
+% ----------------------------------------------------------------------
+For token-valued variables the Jacobian-lens alignment of
+Appendix~\ref{app:topo-jlens} is added as a parameter-free rival.
+
+% ----------------------------------------------------------------------
+% BLOCK 6: rows for the longtable in "Notation and evidence labels",
+% before the row for $\chi_{\rm exit}$.
+% ----------------------------------------------------------------------
+$J_\ell$, $V_J$, $\phi_J$ & Averaged Jacobian from layer $\ell$ to the final
+layer; matrix of unit J-vectors of a variable's values; the J-lens
+alignment (Appendix~\ref{app:topo-jlens}). \\ \addlinespace
+$\mathrm{JC}$ & Jacobian consistency of an intervention pair: relative
+error of the averaged Jacobian's prediction of the logit change. \\
+\addlinespace
+
+% ----------------------------------------------------------------------
+% BLOCK 7: in "Archive of completed checks", after the entry for
+% topo_circle_check.py.
+% ----------------------------------------------------------------------
+\item[\texttt{topo\_jlens\_check.py}, \texttt{.json}] Distortion of the
+J-lens alignment, the $\cot(\theta/2)$ law, and the swap isometry.
+
+% ----------------------------------------------------------------------
+% BLOCK 8: at the top of "Change log", before the version 7.2 entry.
+% ----------------------------------------------------------------------
+\paragraph{Version 7.3 (19 October 2026): the Jacobian lens as a rival.}
+\begin{enumerate}[leftmargin=*]
+\item Appendix~\ref{app:topo-jlens} adds the Jacobian lens of
+\cite{gurnee2026workspace} as a parameter-free linear alignment for
+token-valued variables. Its distortion is the condition number of the
+matrix of J-vectors, a property of the network alone, so the stretch budget
+becomes a network statement.
+\item The averaged Jacobian splits the sensitivity term of the budget into a
+predicted part and a residual; the Jacobian-consistency statistic joins
+diagnostic D2. Hypothesis H-A10 and proof target T7f are added.
+\end{enumerate}
+
+% ----------------------------------------------------------------------
+% BLOCK 9: bibitems, inside thebibliography (alphabetical by key).
+% ----------------------------------------------------------------------
+\bibitem{gurnee2026workspace} W.~Gurnee, N.~Sofroniew, A.~Pearce,
+M.~Piotrowski, I.~Kauvar, R.~Chen, A.~Soligo, P.~Bogdan, E.~Ong, R.~Wang,
+T.~B.~Thompson, D.~Abrahams, S.~Kantamneni, E.~Ameisen, J.~Batson and
+J.~Lindsey. Verbalizable representations form a global workspace in language
+models. Transformer Circuits Thread, Anthropic, 6 July 2026.
+\url{https://transformer-circuits.pub/2026/workspace/index.html}
+
+\bibitem{willkn2026}\unv{} willkn. Anthropic's J-lens: a research
+engineer's analysis. LessWrong, 24 July 2026.

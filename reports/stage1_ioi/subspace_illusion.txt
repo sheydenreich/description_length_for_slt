@@ -1,0 +1,42 @@
+Subspace-illusion check (Makelov et al. 2024) for the learned IOI subspaces (2026-10-22; review item 2.3).
+Code: src/bitsev/experiments/ioi_illusion.py. Results: results/ioi_illusion_gpt2, _pythia14, _qwen05 (illusion.json).
+Jobs 1827642 (GPT-2, 6 min), 1827643 (Pythia-1.4b, 58 min), 1827644 (Qwen2.5-0.5B, 8 min), one A100 each.
+
+Protocol. Same IOI pool and 1024 training targets as the Stage 1 runs (variable io, final-position residual,
+d_V = 16). Per locus and seed (0, 1, 2), one cold-start single-map fit of the subspace map (Adam, 400 steps,
+lr 1e-2, minibatch 256, observed-law loss): the plug-in learner. The output-connected subspace C_tau of the locus
+is spanned by the top right singular vectors of the stacked per-prompt Jacobians d log softmax(32 names) / d h
+(256 training bases), holding a share tau of their energy; k_tau is its dimension. The fitted U is split into
+P_C U (connected part) and (I - P_C) U (disconnected part); each part's span is patched alone and scored by IIA
+on the 1000-pair i.i.d. split. The level of a patch that changes nothing is 0.072 (share of pairs whose clean
+counterfactual equals the base's own answer). Directions of U are ordered by readout sensitivity; for the most
+sensitive one: sensitivity and variance across training bases relative to the median of 256 random directions,
+and the share of its variance explained by the IO name (random directions in brackets). Mean +- s.e. over seeds.
+
+== GPT-2 small (d=768)
+  layer10  IIA full 0.969±0.001 | k99  157: share 0.771±0.003 (random 0.204), IIA connected 0.933±0.006, disconnected 0.073±0.000 | k90  30: IIA connected 0.494±0.015 | most sensitive dir: sens x27, var x22.6, name share 0.83 (random 0.54); sens-weighted name share 0.86
+  layer11  IIA full 0.995±0.001 | k99   79: share 0.681±0.005 (random 0.103), IIA connected 0.996±0.001, disconnected 0.072±0.000 | k90  28: IIA connected 0.962±0.003 | most sensitive dir: sens x35, var x28.1, name share 0.87 (random 0.53); sens-weighted name share 0.80
+  layer12  IIA full 0.973±0.001 | k99   30: share 0.541±0.004 (random 0.039), IIA connected 0.991±0.002, disconnected 0.072±0.000 | k90  22: IIA connected 0.996±0.001 | most sensitive dir: sens x56, var x5.6, name share 0.82 (random 0.31); sens-weighted name share 0.73
+== Pythia-1.4b (d=2048)
+  layer16  IIA full 0.926±0.006 | k99  502: share 0.787±0.005 (random 0.245), IIA connected 0.802±0.005, disconnected 0.072±0.000 | k90  39: IIA connected 0.349±0.004 | most sensitive dir: sens x75, var x42.7, name share 0.91 (random 0.35); sens-weighted name share 0.91
+  layer18  IIA full 0.998±0.000 | k99  385: share 0.738±0.002 (random 0.188), IIA connected 1.000±0.000, disconnected 0.072±0.000 | k90  30: IIA connected 0.960±0.002 | most sensitive dir: sens x79, var x40.4, name share 0.91 (random 0.35); sens-weighted name share 0.87
+  layer20  IIA full 0.997±0.000 | k99  222: share 0.683±0.003 (random 0.108), IIA connected 1.000±0.000, disconnected 0.072±0.000 | k90  28: IIA connected 0.999±0.000 | most sensitive dir: sens x81, var x34.4, name share 0.89 (random 0.31); sens-weighted name share 0.84
+== Qwen2.5-0.5B (d=896)
+  layer22  IIA full 0.974±0.001 | k99  297: share 0.707±0.001 (random 0.331), IIA connected 0.970±0.002, disconnected 0.073±0.000 | k90  34: IIA connected 0.839±0.003 | most sensitive dir: sens x33, var x19.8, name share 0.83 (random 0.30); sens-weighted name share 0.82
+  layer24  IIA full 0.983±0.002 | k99   30: share 0.484±0.001 (random 0.033), IIA connected 0.994±0.000, disconnected 0.073±0.000 | k90  23: IIA connected 0.995±0.000 | most sensitive dir: sens x46, var x15.4, name share 0.83 (random 0.23); sens-weighted name share 0.79
+
+Reading. (1) No illusion at any locus of the three models. The illusion needs a disconnected part that carries
+the variable and a dormant connected part that the patch activates, so that neither part alone works. Here the
+disconnected part alone is at the no-effect level (0.072-0.073) everywhere, and the connected part alone (99%
+of the Jacobian energy) reproduces the full IIA (0.93-1.00) except at Pythia layer 16 (0.80 against 0.93, 0.89 at
+99.9%), where part of the effect runs through directions of low first-order sensitivity. (2) The sensitive
+directions are not dormant: the most sensitive direction of U varies 6-43x more across prompts than a random
+direction, and the IO name explains 82-91% of its variance against 23-54% for random directions. Sensitivity,
+variance and the variable sit in the same directions. (3) 21-52% of each U lies outside C_99 and does nothing
+when patched. At the final loci (GPT-2 layer 12, Qwen layer 24), where C is the 31-dimensional row space of the
+name unembedding, about half of U is such dead weight, and patching the connected part alone slightly raises IIA
+(0.99 against 0.97-0.98). The learner has no gradient that removes those directions; they do not affect the code.
+(4) Caveat: at a residual-stream locus every later layer reads the state, so the split is by local sensitivity
+at the base states, not by the row space of one linear map as in Makelov et al.; the patches themselves are
+nonlinear and are what (1) is based on. The check covers the learned subspace on IOI only; the coupling maps and
+the other testbeds are not checked.

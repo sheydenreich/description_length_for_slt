@@ -1,0 +1,18 @@
+Qwen/Qwen2.5-0.5B            IO-over-S among 16 names 1.000; top-1 over vocab 0.882; single-token names 32; layers 24, width 896; prompt tokens 14; GPU mem 3.4 GB; 9s
+Qwen/Qwen2.5-1.5B            IO-over-S among 16 names 0.941; top-1 over vocab 0.533; single-token names 32; layers 28, width 1536; prompt tokens 14; GPU mem 8.9 GB; 12s
+EleutherAI/pythia-410m       IO-over-S among 16 names 1.000; top-1 over vocab 0.967; single-token names 32; layers 24, width 1024; prompt tokens 14; GPU mem 3.8 GB; 5s
+EleutherAI/pythia-1b         IO-over-S among 16 names 1.000; top-1 over vocab 0.947; single-token names 32; layers 16, width 2048; prompt tokens 14; GPU mem 5.5 GB; 7s
+EleutherAI/pythia-1.4b       IO-over-S among 16 names 1.000; top-1 over vocab 0.921; single-token names 32; layers 24, width 2048; prompt tokens 14; GPU mem 7.4 GB; 9s
+google/gemma-2-2b            IO-over-S among 16 names 0.241; top-1 over vocab 0.043; single-token names 32; layers 26, width 2304; prompt tokens 15; GPU mem 16.1 GB; 52s
+google/gemma-3-1b-pt         IO-over-S among 16 names 0.026; top-1 over vocab 0.000; single-token names 32; layers 26, width 1152; prompt tokens 14; GPU mem 8.9 GB; 9s
+Qwen/Qwen3-1.7B-Base         IO-over-S among 16 names 1.000; top-1 over vocab 0.730; single-token names 32; layers 28, width 2048; prompt tokens 14; GPU mem 10.9 GB; 12s
+Qwen/Qwen2.5-3B              IO-over-S among 16 names 0.980; top-1 over vocab 0.776; single-token names 32; layers 36, width 2048; prompt tokens 14; GPU mem 15.1 GB; 18s
+Qwen/Qwen2.5-7B              IO-over-S among 16 names 1.000; top-1 over vocab 0.711; single-token names 32; layers 28, width 3584; prompt tokens 14; GPU mem 16.1 GB; 109s
+meta-llama/Llama-3.1-8B      IO-over-S among 16 names 1.000; top-1 over vocab 0.336; single-token names 32; layers 32, width 4096; prompt tokens 14; GPU mem 17.6 GB; 110s
+
+Recheck after commit b419fd9 (the beginning-of-sequence token is prepended when the tokenizer adds one by default; job 1813285):
+google/gemma-2-2b            IO-over-S among 16 names 1.000; top-1 over vocab 0.895; single-token names 32; layers 26, width 2304; prompt tokens 16; GPU mem 16.4 GB; 46s
+google/gemma-3-1b-pt         IO-over-S among 16 names 1.000; top-1 over vocab 0.934; single-token names 32; layers 26, width 1152; prompt tokens 15; GPU mem 9.2 GB; 7s
+meta-llama/Llama-3.1-8B      IO-over-S among 16 names 1.000; top-1 over vocab 0.553; single-token names 32; layers 32, width 4096; prompt tokens 15; GPU mem 36.3 GB; 24s
+The earlier Gemma rows (0.241 and 0.026) were a tokenisation artefact, not a capability gap. Llama's top-1 over the vocabulary
+rises from 0.336 to 0.553 with the token; the GPT-2/Qwen/Pythia tokenizers add no such token, so their rows are unchanged.

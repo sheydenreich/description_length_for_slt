@@ -1,0 +1,10 @@
+toy         untrained/h2/coupling                      gain over twin-8 control    -19.1 ±  35.6 bits (n=5, per seed [1, -90, -65, -51, 110], floor 100) IIA 0.51 -> not decisive: rejected
+ib18 d_V 4  untrained/resid_2/coupling                 gain over twin-8 control     67.0 ±  23.6 bits (n=3, per seed [20, 92, 89], floor 100) IIA 0.58 -> not decisive: rejected
+ib18 d_V 8  untrained/resid_2/coupling                 gain over twin-8 control    -15.7 ±  42.0 bits (n=3, per seed [-22, 60, -85], floor 100) IIA 0.58 -> not decisive: rejected
+gpt2        untrained/layer10/coupling/steps=4000      gain over twin-8 control    349.1 ± 194.8 bits (n=3, per seed [702, 30, 316], floor 216) IIA 0.86 -> not decisive: rejected
+gpt2        untrained/layer11/coupling/steps=4000      second twin missing
+gpt2        untrained/layer12/coupling/steps=4000      second twin missing
+gpt2        untrained/layer6/coupling/steps=16000      second twin missing
+gpt2        untrained/layer9/coupling/steps=4000       gain over twin-8 control     10.5 ±  82.3 bits (n=3, per seed [-62, 175, -82], floor 216) IIA 0.87 -> not decisive: rejected
+
+[exited with code 0]

@@ -1,0 +1,25 @@
+Pythia-1.4b checkpoints, Stage 1 with the single-map MAP code (results/pythia_ckpt, array 1814386, one seed, 1024 targets, label-only ~4325 bits).
+Columns: code in bits (IIA i.i.d.) for the valid subspace at layer 16 and layer 20, the untrained-twin control at layer 20, the coupling map at layer 20 on the trained network, and the manufactured alignment (coupling, 400 steps, on the untrained twin at layer 20). Task accuracy per checkpoint in pythia14_checkpoints.txt (step 1000: 0.09, 2000: 0.43, 4000: 0.95, >= 8000: 1.00).
+
+   step   accuracy   valid L16 (IIA)   valid L20 (IIA)   twin L20 (IIA)    coupling L20      manufactured L20
+   1000    0.09      4800 (0.15)     4748 (0.15)     3751 (0.39)     5524 (0.61)     4968 (0.78)
+   2000    0.43      2857 (0.57)     2833 (0.58)     3751 (0.39)     4306 (0.75)     4968 (0.78)
+   3000     -        1544 (0.94)     1451 (0.93)     3751 (0.39)     2778 (0.92)     4968 (0.78)
+   4000    0.95      1755 (0.93)     1551 (0.91)     3751 (0.39)     2873 (0.87)     4968 (0.78)
+   8000    1.00      1023 (0.99)      896 (1.00)     3751 (0.39)     1953 (0.97)     4968 (0.78)
+  16000    1.00      1032 (0.99)      853 (1.00)     3751 (0.39)     1796 (0.95)     4968 (0.78)
+ 143000    1.00      1545 (0.94)      910 (0.99)     3751 (0.39)     2226 (0.95)     4968 (0.78)
+
+Reading (complete series, 2026-10-21; checkpoints 32000 and 64000 were not run). The valid alignment's code
+tracks the task competence: 4750-4800 bits at step 1000 (worse than label-only, IIA 0.15), 2830-2860 at step
+2000 (accuracy 0.43, IIA 0.57), 1450-1540 at step 3000 (0.93), 1550-1750 at 4000 (accuracy 0.95), 850-1030
+from step 8000 on (accuracy 1.00, IIA 0.99-1.00). The code keeps shortening between steps 4000 and 8000
+while the accuracy is already 0.95-1.00: the name subspace goes on becoming cleaner after the task is
+solved. At the final checkpoint the layer-20 code is unchanged (910 bits) but the layer-16 code is 50%
+longer (1545 bits, IIA 0.94): the representation migrates towards later layers late in training. The
+untrained twin's subspace codes the targets in 3751 bits (IIA 0.39: the untrained residual still carries the
+name tokens) and beats the trained network at step 1000, which has by then disrupted the raw copy without
+yet computing the task. The manufactured alignment on the twin reaches IIA 0.78 with 400 steps, an accuracy
+an IIA-judged search would accept, while its code is 640 bits longer than label-only at every checkpoint
+(it does not depend on the checkpoint). The coupling family on the trained network tracks the subspace with
+900-1300 extra bits. Summaries: results/pythia_ckpt/step*/summary.md.

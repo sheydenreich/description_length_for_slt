@@ -1,0 +1,54 @@
+The Jacobian lens as a parameter-free alignment on GPT-2 IOI (appendix v7.3, hypothesis H-A10)
+=============================================================================================
+Run: results/ioi_jlens_gpt2 (job 1813832, 2026-10-20; jlens_gpt2.json, jlens_gpt2_jacobian_consistency.json).
+J-vectors: gradient of each name's final logit w.r.t. the residual at the locus (final position),
+averaged over 1000 prompts; frame = span of the unit J-vectors ("all": 32 names of the output
+alphabet, rank 32; "train": the 16 training names, rank 16). The alignment is the subspace
+interchange with that fixed frame: no fitted parameters, so the prequential code is one
+predictor's loss on every target and the learning coefficient is 0. Same 1024 targets and the
+same label-only code (4324.5 bits) as every GPT-2 Stage 1 run.
+
+network    names  locus    cond(V_J)   code (bits)  gain over label-only   IIA iid   IIA shifted
+trained    all    layer0   ~          7591 (fails: IIA 0.07)        -3267        0.07      0.06
+trained    all    layer6   ~          (fails)                        ~-3200      0.07      ~0.06
+trained    all    layer9   121        7592                           -3267       0.07      0.06
+trained    all    layer10  119        1504                           +2821       0.80      0.78
+trained    train  layer10  75         1530                           +2794       0.78      0.06
+trained    all    layer11  111         795                           +3529       0.98      0.99
+trained    train  layer11  68          800                           +3525       0.98      0.07
+trained    all    layer12  7.6         699                           +3626       1.00      0.99
+trained    train  layer12  4.6         707                           +3618       1.00      0.07
+untrained  any    any      1.3-1.5    5169-5180                      -845..-855  0.04      0.00
+(exact rows for layers 0 and 6 in jlens_gpt2.json)
+
+Learned maps on the same targets, for comparison (gain over label-only, bits):
+  subspace d_V 16, layer 11: +3302 +- 3 (mixture of 4, 5 seeds), +3385 +- 5 (single MAP map, 3 seeds);
+  layer 10: +2975 (mixture); layer 12: +3145 (mixture); coupling at layer 11 on the trained network
+  +2459 +- 16 (MAP code); manufactured alignment (coupling on the twin, layer 10): +704 +- 63 (mixture),
+  -1985 +- 602 (MAP code). Learner coefficients of the MAP codes: 49, 226, 988 (regret_slopes_map_code.txt).
+
+Jacobian consistency JC = ||delta - (W_U J) Delta|| / ||delta|| on 500 triples (base, source, source')
+from the i.i.d. split, median / mean / 90th percentile:
+  layer 10:  J-lens 0.26 / 0.37 / 0.82 (IIA 0.80);  learned subspace 0.38 / 0.49 / 0.93 (IIA 0.97);
+             manufactured 2.05 / 2.58 / 4.84 (IIA 0.80, on the twin's own averaged Jacobian)
+  layer 11:  J-lens 0.15 / 0.21 / 0.42 (IIA 0.98);  learned subspace 0.24 / 0.29 / 0.56 (IIA 0.99);
+             manufactured 2.24 / 2.48 / 4.04 (IIA 0.84)
+
+Reading. (1) H-A10 holds on every count. At the loci where the name is verbalizable (layers 11, 12)
+the parameter-free alignment is as faithful as the learned subspace (0.98-1.00) and its code is
+*shorter*: +3529 / +3626 bits against +3302 / +3145 for the learned subspace under the mixture code
+and +3385 for the single MAP map at layer 11. At layer 10 the learned map wins (+2975 vs +2821; IIA
+0.97 vs 0.80), at layer 9 and below the lens fails (0.07, the chance level for 16 names) while the
+learned subspace also fails there. (2) On the untrained twin it fails everywhere (IIA 0.04, code 850
+bits longer than label-only), as predicted for a copied variable the twin cannot route. (3) The
+Jacobian-consistency statistic separates the manufactured alignment from both valid ones by a factor
+6-10 at the median (2.0-2.2 against 0.15-0.38): the manufactured map moves the output through local
+sensitivity that the network's averaged Jacobian does not show. (4) The "all" variant generalises to
+the 16 unseen names (0.99) because their directions are in the frame; the "train" variant, the fair
+comparison, matches the learned map's failure on unseen names (0.07): generalisation across names is
+a property of which directions are in the frame, not of learning. (5) For the complexity ladder: the
+lens sits at learning coefficient 0 with the shortest code of all explanations of this variable; the
+learned subspace pays its coefficient (49 under the MAP code at n <= 1024) without buying a shorter
+code; the coupling and the manufactured alignment pay 226 and 988. Distortion of the bijection
+phi_J (cond(V_J)): 68-121 at layers 9-11 on the trained network, 1.3-1.5 on the twin, 4.6-7.6 at
+the final locus; the interchange itself is an isometry. Figure: reports/talk_slt/gpt2_complexity_ladder.png.

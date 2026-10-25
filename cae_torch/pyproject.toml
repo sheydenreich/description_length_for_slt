@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cae-torch"
+version = "0.0.1"
+description = "PyTorch translations of the simulated systems of the Causal Abstraction Error benchmark (Meloux et al. 2026)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = ["torch>=2.2", "numpy>=1.26"]
+
+[project.optional-dependencies]
+# Equivalence tests need the original numpy systems (git clone of MelouxM/CAE) and its package.
+reference = ["causal-abstraction-eval>=1.0.0", "scipy", "numba"]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["cae_torch*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

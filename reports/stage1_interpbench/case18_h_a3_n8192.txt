@@ -1,0 +1,27 @@
+H-A3 on InterpBench 18 with 8192 targets (MAP subspace code: L-BFGS 100 steps per block, warm start,
+prior 0.01, randomized response 0.05, 3 seeds; results/stage1_ib18_dv{4,1}_map_n8192, slopes in
+case18_h_a3_dv{4,1}_n8192.json). Regret = prequential loss minus the loss of the final fit on the
+same targets; slopes are per ln n after the batching correction.
+
+                         slope n>=64     slope n>=512   regret at 8192   nominal lambda   slope at n<=1024 (earlier run)
+d_V=4 resid_2 (valid)    16.8 +- 2.8     21.1 +- 1.7    144 nats         512              8 +- 3
+d_V=4 resid_1 (misspec.) 90.9 +- 18.4    -              684 nats         512              ~107
+d_V=1 resid_2 (valid)    31.5 +- 8.8     34.8 +- 5.8    285 nats         129.5            12
+d_V=1 resid_1 (misspec.) 114.7 +- 11.0   -              876 nats         129.5            ~130
+
+Mean regret of the valid d_V=4 alignment at the block ends (n = 16 ... 8192):
+  7.8  15.2  19.3  34.8  42.2  60.9  71.2  83.5  115.8  144.1
+local slope per ln n between consecutive blocks:
+  10.6  5.9  22.4  10.6  27.0  14.9  17.7  46.6  40.9
+Same for d_V=1: regret 16 41 64 94 113 138 192 208 245 285; local slopes 36 33 43 28 36 78 23 54 57.
+
+Reading. The regret of the valid alignment does not saturate: its local slope is 10-27 nats per ln n
+up to n = 1024 and 41-47 over the last two doublings (d_V = 4), 23-78 throughout for d_V = 1. The MAP's
+own mean training loss rises from 0.149 (1024 targets) to 0.170 (8192), i.e. the 1024-target fits were
+partly interpolating (the frame has 260 x 4 = 1040 parameters against 1024 targets), and the earlier
+"saturation" was measured inside that regime. Beyond n of about 2000 the data begin to constrain the
+map and the regret grows at roughly 45 nats per ln n, which as an effective coefficient means about 90
+constrained directions, 9% of the frame's parameters (nominal 512) and more than the 5-7 directions that
+carry 90% of the empirical Fisher trace at n = 1024. Whether the slope settles there is open; runs to
+n = 32768 (bitsev-ib-ha3x-dv4/dv1, EPYC) were submitted on 2026-10-20. The misspecified locus grows
+much faster (91-115) from the excess-loss drift, as before; the ordering by faithfulness is unchanged.

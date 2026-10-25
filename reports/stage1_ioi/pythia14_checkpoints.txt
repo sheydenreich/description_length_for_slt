@@ -1,0 +1,17 @@
+Pythia-1.4b training checkpoints: IOI competence on our prompts (job 1814216, 2026-10-20; A100; 400 prompts,
+16 training names; `bitsev.experiments.ioi_model_check repo@stepN`).
+
+checkpoint   IO-over-S among 16 names   top-1 over the vocabulary
+step1000     0.092 (chance 1/16)        0.000
+step2000     0.434                      0.125
+step4000     0.947                      0.678
+step8000     1.000                      0.987
+step16000    1.000                      0.980
+step32000    1.000                      0.882
+step64000    1.000                      0.868
+step143000   1.000                      0.921   (final)
+
+The task competence appears between steps 1000 and 4000 (2-8 B tokens). Stage 1 at checkpoints 1000,
+2000, 3000, 4000, 8000, 16000 and 143000 (single-map MAP learner, loci 0 / 16 / 20, cheap 400-step
+adversary) is the competence-onset series: does the name subspace become compressible when the task is
+solved, before, or after?

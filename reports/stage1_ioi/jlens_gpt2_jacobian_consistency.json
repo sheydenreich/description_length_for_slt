@@ -1,0 +1,56 @@
+[
+ {
+  "locus": "layer10",
+  "alignment": "jlens",
+  "network": "trained",
+  "iid_iia": 0.8,
+  "jc_median": 0.25896894931793213,
+  "jc_mean": 0.36984312534332275,
+  "jc_q90": 0.8174081444740295
+ },
+ {
+  "locus": "layer10",
+  "alignment": "subspace",
+  "network": "trained",
+  "iid_iia": 0.971,
+  "jc_median": 0.3826061487197876,
+  "jc_mean": 0.4928668141365051,
+  "jc_q90": 0.9331624507904053
+ },
+ {
+  "locus": "layer10",
+  "alignment": "manufactured",
+  "network": "untrained",
+  "iid_iia": 0.802,
+  "jc_median": 2.0477283000946045,
+  "jc_mean": 2.5765931606292725,
+  "jc_q90": 4.83794641494751
+ },
+ {
+  "locus": "layer11",
+  "alignment": "jlens",
+  "network": "trained",
+  "iid_iia": 0.984,
+  "jc_median": 0.15201649069786072,
+  "jc_mean": 0.2066786140203476,
+  "jc_q90": 0.419098824262619
+ },
+ {
+  "locus": "layer11",
+  "alignment": "subspace",
+  "network": "trained",
+  "iid_iia": 0.995,
+  "jc_median": 0.2355358600616455,
+  "jc_mean": 0.2877793610095978,
+  "jc_q90": 0.5597789287567139
+ },
+ {
+  "locus": "layer11",
+  "alignment": "manufactured",
+  "network": "untrained",
+  "iid_iia": 0.845,
+  "jc_median": 2.238107681274414,
+  "jc_mean": 2.4777162075042725,
+  "jc_q90": 4.035595893859863
+ }
+]

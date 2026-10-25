@@ -1,0 +1,180 @@
+\documentclass[11pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{hyperref}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+\newtheorem*{example}{Example}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\ts}{\theta^*}
+\newcommand{\hth}{\hat\theta_m}
+
+\title{The plug-in learner coefficient $\tfrac12\tr(FH^{-1})$:\\ sandwich covariance, excess loss and the information equality}
+\author{Notes on Section 3.7 of the Stage 1 write-up}
+\date{21 October 2026}
+
+\begin{document}
+\maketitle
+
+\noindent The write-up predicts the regret slope of a plug-in (point-estimate) code by $\kappa=\tfrac12\tr(FH^{-1})$, with $H$ the Hessian of the expected loss and $F$ the second moment of the per-example gradients at the optimum. These notes derive that formula in three steps (Sections~\ref{sec:sandwich}--\ref{sec:sum}), prove that $F=H$ for a correctly specified log-likelihood (Section~\ref{sec:infoeq}), and list where each step can fail (Section~\ref{sec:fail}).
+
+\section{Setup}
+
+Data $z_1,z_2,\dots$ are i.i.d., $z=(x,y)$. The per-example loss is the negative log-likelihood of a conditional model,
+\[
+\ell(z,\theta)=-\log p_\theta(y\mid x),\qquad \theta\in\mathbb R^d .
+\]
+The population risk and its minimiser are
+\[
+L(\theta)=\E\,\ell(z,\theta),\qquad \ts=\arg\min_\theta L(\theta),\qquad \nabla L(\ts)=0,
+\]
+and the empirical risk on $m$ examples and its minimiser (the plug-in fit) are
+\[
+L_m(\theta)=\frac1m\sum_{i=1}^m\ell(z_i,\theta),\qquad \hth=\arg\min_\theta L_m(\theta),\qquad \nabla L_m(\hth)=0 .
+\]
+The two matrices, both evaluated at $\ts$:
+\[
+H=\nabla^2L(\ts)=\E\,\nabla^2\ell(z,\ts),\qquad
+F=\E\bigl[\nabla\ell(z,\ts)\,\nabla\ell(z,\ts)^{\top}\bigr].
+\]
+$H$ is the \emph{curvature} of the expected loss: how fast it rises as $\theta$ leaves $\ts$. $F$ is the \emph{spread} of the individual examples' gradients: because $\E\,\nabla\ell(z,\ts)=\nabla L(\ts)=0$, it is their covariance, i.e.\ how much single examples disagree about which way to move. Both are computed from the same data distribution; they are different functionals of it, not the same quantity on different subsets.
+
+\section{The sandwich covariance}
+\label{sec:sandwich}
+
+\begin{lemma}[Covariance under a linear map]\label{lem:lin}
+If $g$ is a random vector with mean $0$ and covariance $\Sigma$, and $A$ is a fixed matrix, then $\Cov(Ag)=A\Sigma A^\top$.
+\end{lemma}
+\begin{proof}
+$\Cov(Ag)=\E[Ag\,(Ag)^\top]=A\,\E[gg^\top]\,A^\top=A\Sigma A^\top$. The matrix appears twice because a covariance is quadratic in the vector.
+\end{proof}
+
+\begin{proposition}[Sandwich]\label{prop:sandwich}
+Under the regularity conditions of Section~\ref{sec:fail} (in particular $H$ positive definite),
+\[
+\sqrt m\,(\hth-\ts)\ \xrightarrow{d}\ \mathcal N\bigl(0,\;H^{-1}FH^{-1}\bigr).
+\]
+\end{proposition}
+\begin{proof}[Derivation]
+Expand the first-order condition $\nabla L_m(\hth)=0$ around $\ts$ (mean-value form, $\bar\theta$ between $\hth$ and $\ts$):
+\[
+0=\nabla L_m(\ts)+\nabla^2L_m(\bar\theta)\,(\hth-\ts)
+\quad\Longrightarrow\quad
+\hth-\ts=-\bigl[\nabla^2L_m(\bar\theta)\bigr]^{-1}\,\nabla L_m(\ts).
+\]
+Two limit theorems handle the two factors.
+\begin{itemize}
+\item \emph{Law of large numbers.} $\hth\to\ts$ (consistency), hence $\bar\theta\to\ts$, and the empirical Hessian converges to its mean: $\nabla^2L_m(\bar\theta)\to H$.
+\item \emph{Central limit theorem.} $\nabla L_m(\ts)=\frac1m\sum_i\nabla\ell(z_i,\ts)$ is an average of i.i.d.\ vectors with mean $0$ and covariance $F$, so $\sqrt m\,\nabla L_m(\ts)\xrightarrow{d}\mathcal N(0,F)$.
+\end{itemize}
+By Slutsky's lemma, $\sqrt m(\hth-\ts)\approx -H^{-1}\cdot\sqrt m\,\nabla L_m(\ts)$, and Lemma~\ref{lem:lin} with $A=-H^{-1}$ (symmetric) gives the covariance $H^{-1}FH^{-1}$.
+\end{proof}
+
+\begin{remark}[One dimension]
+With scalars $h=L''(\ts)$ and $f=\E[\ell'(z,\ts)^2]$, the derivation reads $\hth-\ts\approx-g/h$ with $g$ the average gradient, $\operatorname{Var}(g)=f/m$, so
+\[
+\operatorname{Var}(\hth)\approx\frac{f}{m\,h^2}.
+\]
+Noisy per-example gradients (large $f$) make the fit wander; a sharply curved loss (large $h$) pins it down. The name ``sandwich'' only describes the shape $H^{-1}\,F\,H^{-1}$: $F$ between two slices of $H^{-1}$.
+\end{remark}
+
+\section{The excess loss of the fit}
+\label{sec:excess}
+
+The quantity a prequential code pays at step $m$ is the expected loss of the fit $\hth$ on a fresh example, in excess of the best predictor's:
+\[
+\E\bigl[L(\hth)\bigr]-L(\ts).
+\]
+Expand $L$ around $\ts$; the linear term vanishes because $\nabla L(\ts)=0$:
+\[
+L(\hth)-L(\ts)=\tfrac12(\hth-\ts)^\top H(\hth-\ts)+o\bigl(\|\hth-\ts\|^2\bigr).
+\]
+For any random vector $u$ with mean $0$, $\E[u^\top Hu]=\E\tr(Huu^\top)=\tr(H\Cov u)$. With $\Cov(\hth-\ts)\approx H^{-1}FH^{-1}/m$ from Proposition~\ref{prop:sandwich}:
+\[
+\E\bigl[L(\hth)\bigr]-L(\ts)\approx\frac{1}{2m}\tr\bigl(H\,H^{-1}FH^{-1}\bigr)=\frac{\tr(FH^{-1})}{2m}=\frac{\kappa}{m},
+\qquad
+\boxed{\ \kappa=\tfrac12\tr(FH^{-1})\ }.
+\]
+In one dimension: $\tfrac12 h\cdot f/(mh^2)=f/(2mh)$. One factor of $h$ cancels; what remains is the ratio of gradient noise to curvature.
+
+\begin{remark}
+Passing from the distributional limit to the expectation needs uniform integrability of $m\|\hth-\ts\|^2$. This is the standard heuristic and holds in regular models; it is where heavy tails or rare divergent fits would break the formula.
+\end{remark}
+
+\section{From excess loss to the regret slope}
+\label{sec:sum}
+
+A per-sample prequential code codes target $m+1$ with the fit on the first $m$ targets. Summing the expected excess,
+\[
+\E\,\mathrm{Reg}(n)\approx\sum_{m=1}^{n}\frac{\kappa}{m}=\kappa\ln n+O(1),
+\]
+so $\kappa$ is the slope of the regret against $\ln n$. (Block codes with geometric ratio $r$ multiply this slope by $(r-1)/\ln r$; the write-up divides it out as the ``batching correction''.)
+
+\section{The information equality: \texorpdfstring{$F=H$}{F=H} under correct specification}
+\label{sec:infoeq}
+
+Let $s(\theta)=\nabla_\theta\log p_\theta(y\mid x)$ be the score. Then
+\[
+\nabla\ell=-s,\qquad
+\nabla^2\ell=-\nabla\frac{\nabla p_\theta}{p_\theta}=-\frac{\nabla^2p_\theta}{p_\theta}+\frac{\nabla p_\theta\,\nabla p_\theta^\top}{p_\theta^2}
+=-\frac{\nabla^2p_\theta}{p_\theta}+s\,s^\top .
+\]
+Taking expectations at $\ts$:
+\begin{equation}
+H=F-\E\!\left[\frac{\nabla^2p_{\ts}(y\mid x)}{p_{\ts}(y\mid x)}\right].
+\label{eq:HF}
+\end{equation}
+
+\begin{proposition}[Information equality]
+If the model is correctly specified at $\ts$, i.e.\ the true conditional law of $y$ given $x$ is $p_{\ts}(\cdot\mid x)$ for (almost) every $x$, then $H=F$, both equal to the Fisher information $I(\ts)=\E[s s^\top]$.
+\end{proposition}
+\begin{proof}
+Condition on $x$ and take the expectation over $y$ under the true law, which is $p_{\ts}$ itself. The density cancels against the denominator in~\eqref{eq:HF}:
+\[
+\E_{y\sim p_{\ts}(\cdot\mid x)}\!\left[\frac{\nabla^2p_{\ts}(y\mid x)}{p_{\ts}(y\mid x)}\right]
+=\sum_y\nabla^2p_\theta(y\mid x)\Big|_{\ts}
+=\nabla^2\Bigl(\sum_yp_\theta(y\mid x)\Bigr)\Big|_{\ts}
+=\nabla^2 1=0 .
+\]
+Averaging over $x$ (under any distribution) gives $H=F$.
+\end{proof}
+
+\noindent Consequently $\tr(FH^{-1})=\tr(I_d)=d$ and $\kappa=d/2$: the classical cost of $\tfrac12\ln n$ per parameter, which in regular models coincides with the Bayes learning coefficient $\lambda=d/2$.
+
+\paragraph{Assumptions of the information equality.}
+\begin{enumerate}
+\item \emph{Correct specification at $\ts$.} The conditional law of $y$ given $x$ is exactly $p_{\ts}(\cdot\mid x)$. The distribution of $x$ is arbitrary; only the $y$-expectation must be under the model's own law. This is the cancellation step.
+\item \emph{The loss is the log-likelihood.} No temperature, reweighting or penalty: for $\ell=-\tau\log p_\theta$, or with a regulariser added, $F\neq H$ even when the model is correct.
+\item \emph{Differentiation and summation commute,} and the support of $p_\theta$ does not depend on $\theta$. Automatic for finitely many classes; for continuous $y$ it needs dominated convergence.
+\item \emph{Smoothness and positivity.} $p_\theta$ is twice differentiable near $\ts$ and positive wherever the true law has mass (so that $\log p$ and $s$ are defined).
+\item \emph{Only at $\ts$.} Away from the optimum, or for the empirical versions at finite $m$, $F$ and $H$ differ; they agree only in expectation at $\ts$, and the empirical estimates only asymptotically.
+\end{enumerate}
+
+\begin{example}[Misspecified noise scale]
+Model $y\sim\mathcal N(\theta,\sigma^2)$, truth $y\sim\mathcal N(\mu,\tau^2)$. Then $\ell=(y-\theta)^2/(2\sigma^2)+\text{const}$, $\ts=\mu$, and
+\[
+H=\frac1{\sigma^2},\qquad F=\E\frac{(y-\mu)^2}{\sigma^4}=\frac{\tau^2}{\sigma^4},\qquad \kappa=\frac{\tau^2}{2\sigma^2}.
+\]
+The mean is estimated just as well either way, but an overconfident model ($\sigma<\tau$) pays more per $\ln n$ than $d/2=\tfrac12$, and an underconfident one less. Correct specification $\sigma=\tau$ restores $F=H$ and $\kappa=\tfrac12$. Coding randomized-response labels with the clean softmax is the classification analogue of $\sigma<\tau$.
+\end{example}
+
+\begin{remark}[Empirical versus model Fisher]
+The write-up's $F$ is the \emph{empirical} Fisher: gradients evaluated at the observed labels. That is the $F$ of the sandwich, the right quantity for $\kappa$. The \emph{model} Fisher $\E_x\E_{y\sim p_{\ts}}[ss^\top]$ takes the $y$-expectation under the model; it equals $F$ only under correct specification.
+\end{remark}
+
+\section{Where the steps fail}
+\label{sec:fail}
+
+\paragraph{Assumptions of the sandwich and excess-loss steps} (needed even when $F\neq H$): i.i.d.\ data; a unique optimum $\ts$ in the interior of the parameter set, to which $\hth$ converges; $\ell$ twice continuously differentiable with dominated derivatives near $\ts$; $F$ finite; and $H$ positive definite.
+
+\paragraph{Singular models.} If $H$ is singular, $H^{-1}$ does not exist: along the flat directions the fit does not concentrate at rate $m^{-1/2}$, the quadratic expansion is not the leading term, and Proposition~\ref{prop:sandwich} fails. This is the regime of Watanabe's theory, in which the Bayes learning coefficient satisfies $\lambda<d/2$ and a plug-in's coefficient need not equal $\lambda$. Exact gauge directions (such as $W\to WA$ for the subspace map) are harmless if they are quotiented out; the problem is directions that are flat to leading order but not exactly.
+
+\paragraph{The write-up's networks.} On GPT-2 the formula is applied with a pseudo-inverse on the non-flat directions. There $F\neq H$ for two reasons: the target law is only approximately realizable (it is reached only at infinite logits, so assumption~1 holds only in the limit), and the readout is saturated, so the per-example gradients are tiny in most directions. Few directions carry most of $F$, and $\tfrac12\tr(FH^{-1})$ comes out two orders of magnitude below the family's nominal $\lambda=d_V(d-d_V)/2$: the code pays only for the directions the data actually pull on.
+
+\end{document}

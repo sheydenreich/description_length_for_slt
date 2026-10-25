@@ -1,0 +1,667 @@
+\documentclass[11pt,a4paper]{article}
+% Dynamics note (P0 of the research plan "Bits of Evidence", version 7.2).
+% Alignment Forum version. Compile with pdflatex (run twice for references).
+% Every number in this note is taken from the plan's Appendix A; the scripts
+% that produced them are archived (see the Reproducibility paragraph).
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,urlcolor=blue!55!black,pdftitle={Learning coefficients predict selection, not passage},pdfauthor={Sven Heydenreich}]{hyperref}
+
+% --- notation -------------------------------------------------------------
+\newcommand{\E}{\mathbb E}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\dd}{\mathrm d}
+\newcommand{\chiexit}{\chi_{\mathrm{exit}}}
+\newcommand{\unv}{\textsuperscript{\dag}}
+
+% --- evidence labels, as in the research plan -----------------------------
+\definecolor{cknown}{RGB}{20,100,40}
+\definecolor{ccalc}{RGB}{25,70,150}
+\definecolor{cnum}{RGB}{0,105,115}
+\definecolor{chyp}{RGB}{150,30,40}
+\newcommand{\evl}[2]{{\small\bfseries\color{#1}[#2]}}
+\newcommand{\LKnown}{\evl{cknown}{Known result}}
+\newcommand{\LCalc}{\evl{ccalc}{Internal calculation}}
+\newcommand{\LNum}{\evl{cnum}{Numerical check}}
+\newcommand{\LHyp}{\evl{chyp}{Hypothesis}}
+
+\setlength{\emergencystretch}{2em}
+\setlength{\parskip}{0.25em}
+
+\title{\textbf{Learning coefficients predict selection, not passage}\\[0.4em]
+\large What the singular-learning-theory invariants of a flat set do and do not say\\
+about how long stochastic gradient descent stays there}
+\author{Sven Heydenreich}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Singular learning theory attaches to every flat set of the population loss
+two invariants, the learning coefficient $\lambda$ and its multiplicity $m$,
+and these invariants fix the posterior mass and the Bayesian code length of
+the set. It is tempting to read them as dynamical quantities as well: the
+flatter a saddle in the sense of $\lambda$, the longer SGD should linger
+there. This note argues that the reading is wrong as a general statement and
+that it fails in checkable ways in the simplest models where it can be
+tested. Four controls hold $(\lambda,m)$ fixed and change exit times by
+changing the teacher, the gradient covariance, the initialization scales or
+the metric. For isotropic diffusion through a flat set, the published
+passage law $T\propto\eps^\lambda$ is replaced by
+$T\propto\eps^{\lambda-\chiexit}$ up to logarithms, where $\chiexit$ is the
+scaling exponent of the exit cross-section; three worked germs give
+constant, logarithmic and $\eps^{-1/4}$ passage times where $\eps^\lambda$
+predicts decay, and finite-difference solutions agree. For a discrete
+balanced chain, the diffusion approximation is accurate only for small
+steps, its strong-noise power law never appears, label noise traps about
+$0.9\%$ of paths forever, and exit time is not a function of the ratio of
+step size to batch size. The positive lesson is that $\lambda$ governs
+selection and evidence, that is, which region the posterior prefers and how
+many bits it costs, and not the time it takes a training process to pass.
+\end{abstract}
+
+\paragraph{Evidence labels.} Following the research plan this note is drawn
+from, claims are tagged. \LKnown{} is established in the literature and
+cited where used. \LCalc{} is worked out here or in the companion appendix
+under stated assumptions; the label implies neither novelty nor a completed
+proof. \LNum{} is a completed computation on the stated mathematical model,
+archived with code; it says nothing about observed training of large
+networks. \LHyp{} is a claim the author expects to be true and has not
+established.
+
+\section{Summary in plain language}
+\label{sec:summary}
+
+Singular learning theory (SLT) says that the Bayesian posterior at sample
+size $n$ gives a flat set $S$ of the population loss a weight governed by
+its learning coefficient $\lambda_S$: the free energy of a neighbourhood of
+$S$ is $nL_n+\lambda_S\log n-(m_S-1)\log\log n+O(1)$ \cite{watanabe2009}.
+Smaller $\lambda_S$ means more posterior mass and a shorter code. In
+developmental interpretability it has become common to also read
+$\lambda_S$ dynamically, as a measure of how long gradient-based training
+is held up at $S$. A recent paper makes this precise for diffusion through
+a flat set and derives a passage time proportional to $\eps^{\lambda}$,
+where $\eps$ is the loss level that defines the set \cite{hennick2026}.
+
+This note makes three claims and one observation.
+
+\begin{enumerate}
+\item \LCalc{} \emph{Scoped impossibility.} No function of the saddle
+invariants $(\lambda_s,m_s)$, and indeed no statistic of the population loss
+alone, determines the statistics of saddle passage once the teacher, the
+gradient covariance, the initialization scales or the metric are allowed to
+vary. Four explicit controls keep the invariants fixed and change the exit
+time by polynomial factors (Section~\ref{sec:impossibility}).
+\item \LCalc{} and \LNum{} \emph{Passage through flat sets.} For isotropic
+diffusion in a tube $\{K<\eps\}$ with reflecting walls, the Fick--Jacobs
+reduction gives $T\propto\eps^{\lambda-\chiexit}$ up to logarithms, where
+$\chiexit$ is the scaling exponent of the exit cross-section. In three
+germs with $\lambda\in\{\tfrac12,\tfrac12,\tfrac14\}$ the passage time is
+constant, logarithmic in $1/\eps$, and proportional to $\eps^{-1/4}$; the
+law $\eps^\lambda$ predicts decay in all three. Finite-difference solutions
+of the full two-dimensional problem agree (Section~\ref{sec:flat}).
+\item \LNum{} \emph{Discrete chain.} For the discrete balanced update, the
+continuous approximation is accurate for small steps and its strong-noise
+power law never appears. With label noise about $0.9\%$ of paths cross zero
+and never exit, so the unconditional mean exit time is infinite. Exit time
+is not a function of $\eta/b$ alone (Section~\ref{sec:discrete}).
+\item \emph{The positive lesson.} $\lambda$ governs posterior masses and code
+lengths, that is, selection and evidence, not passage times. A
+basin-selection account of grokking makes the same distinction in a
+different setting \cite{cullen2026} (Section~\ref{sec:lesson}).
+\end{enumerate}
+
+What the note does not claim. It says nothing about training of large
+networks; every computation concerns a stated low-dimensional model. It does
+not say that $\lambda$ is irrelevant to dynamics: under a fixed optimizer
+with a fixed teacher, finite-temperature quantities such as activated escape
+rates do depend on $\lambda$ through the equilibrium masses of wells. It
+does not claim that the published law is wrong in the authors' exact
+formulation; the calculation here uses a reflecting-tube caricature, and the
+discrepancy will be checked with the authors, who receive a courtesy copy of
+this note before it is posted.
+
+\section{The question}
+\label{sec:question}
+
+Let $K(w)\ge0$ be the population loss of a model with parameter $w$, and let
+$S$ be a connected component of its zero set or, more generally, of a level
+set of critical points that the training trajectory has to leave. \LKnown{}
+Near $S$ the volume of the sublevel set scales as
+\begin{equation}
+\operatorname{vol}\{w\ \text{near}\ S:\ K(w)<\eps\}\;\asymp\;
+\eps^{\lambda_S}\,\bigl(\log\tfrac1\eps\bigr)^{m_S-1},\qquad \eps\to0,
+\label{eq:volume}
+\end{equation}
+and the same pair $(\lambda_S,m_S)$ appears in the local free energy
+\begin{equation}
+F_U(n)=-\log\int_U e^{-nL_n(w)}\varphi(w)\,\dd w
+= nL_n(w_0)+\lambda_U\log n-(m_U-1)\log\log n+c_U+o(1)
+\label{eq:localF}
+\end{equation}
+of any neighbourhood $U$ of $S$ \cite{watanabe2009}. Here $L_n$ is the
+empirical average negative log likelihood, $w_0\in S$ an optimal parameter
+and $\varphi$ a prior with positive density near $S$. The posterior odds
+between two regions are $\exp[-(F_{U_1}-F_{U_2})]$, and the expected excess
+log loss of the Bayes predictive at sample size $n$ is $\lambda/n$. Local
+values of $\lambda$ at a trained parameter are estimated by stochastic
+gradient Langevin dynamics \cite{lau2025llc}.
+
+The invariants are therefore volume exponents. Training by SGD is a
+process, and the question is whether these volume exponents also control
+the process. Two forms of the question are in circulation.
+
+\begin{description}
+\item[Saddle passage.] A trajectory approaches a saddle set $S$ with
+invariants $(\lambda_s,m_s)$ and leaves after a plateau. Does some function
+of $(\lambda_s,m_s)$ determine the distribution of the plateau length?
+\item[Passage through a flat set.] A diffusion (the continuous caricature of
+noisy SGD) moves inside $\{K<\eps\}$ until it reaches an escape set. Does
+the mean passage time scale as $\eps^{\lambda}$ \cite{hennick2026}?
+\end{description}
+
+Both questions are answered in the negative below, in the strongest form
+the author could make checkable. The negative answer is not a technicality:
+the quantities that control the process are the ones the volume exponent
+discards, namely the direction and strength of the drift, the covariance of
+the noise, the sizes of the cross-sections through which the trajectory
+must pass, and the step size.
+
+\section{Scoped impossibility: four controls}
+\label{sec:impossibility}
+
+\LCalc{} The controls use the balanced linear chain of depth $L$: a product
+of $L$ scalar weights that stay equal under gradient descent, so the state is
+one number $u$ and the student output is $u^Lx$. The population loss has a
+flat set at $u=0$ whose invariants are $(\lambda_s,m_s)=(1,L)$ for a
+realizable teacher. Each control holds the model-intrinsic invariants fixed
+and changes one ingredient of the training process; in each case the exit
+time changes by a polynomial factor or more. The derivations were given in
+version~5 of the author's research plan (its Appendices A and B and
+Section~6.2) and are not reproduced here; they will appear in a companion
+appendix to the arXiv version of this note.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{2.1cm}p{3.6cm}p{3.5cm}p{4.9cm}@{}}
+\toprule
+Control & Held fixed & Changed & Consequence for exit \\
+\midrule
+Teacher & Self-divergence and $(\lambda_s,m_s)=(1,L)$ & Realizable
+teacher, cancelling versus non-cancelling & Exit time
+$\propto u_0^{-(2L-2)}$ versus $u_0^{-(L-2)}$ \\ \addlinespace
+Gradient covariance & Population loss, Fisher, self-divergence &
+Gaussian versus Rademacher inputs & Positive versus exactly zero
+minibatch noise \\ \addlinespace
+Scale hierarchy & Self-divergence, teacher & Initialization
+$(\eps,\eps,\sqrt\eps,1)$ versus equal small layers &
+$\tfrac12\eps^{-1/2}\log(1/\eps)$ versus $\eps^{-(r-2)}$ \\ \addlinespace
+Metric & Population loss, self-divergence & Euclidean versus natural
+gradient & Polynomial delay versus bounded time; fixed damping restores
+the delay \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Here $u_0$ is the initial scale of the chain.\footnote{The
+``self-divergence'' and the exponent $r$ in the scale-hierarchy row are
+defined in the version-5 derivations. \textbf{[TODO: import the definitions
+of the self-divergence and of $r$ from the version-5 appendix before
+posting.]}}
+
+\paragraph{Reading the table.} The teacher control is the sharpest. Two
+realizable teachers give the same population loss near the saddle up to the
+invariants, but one of them makes the leading drift term cancel and the
+other does not, and the exit time changes from $u_0^{-(L-2)}$ to
+$u_0^{-(2L-2)}$. The gradient-covariance control keeps the population loss,
+the Fisher information and the self-divergence fixed and switches the input
+distribution from Gaussian to Rademacher: with Rademacher inputs the
+minibatch gradient of the chain has exactly zero variance, so the
+``noise-driven'' escape of the Gaussian case does not exist. The
+scale-hierarchy control shows that the initialization, not the loss,
+decides between a logarithmically corrected $\eps^{-1/2}$ delay and a
+higher power. The metric control shows that natural-gradient descent on the
+same loss leaves the saddle in bounded time, and that adding a fixed damping
+to the natural metric brings the polynomial delay back.
+
+\paragraph{What the impossibility covers and what it does not.} The
+statement is: no function of $(\lambda_s,m_s)$, nor of any other statistic
+of the population loss alone, determines saddle-passage statistics once
+teacher, gradient covariance, initialization scales or metric may vary.
+This is a statement about the class of training processes that share a
+population loss. It does \emph{not} cover teacher-dependent
+finite-temperature quantities under a fixed optimizer. In particular, for an
+activated escape from a well at temperature $T$ under a Gibbs law, the
+escape rate is inversely proportional to the equilibrium mass of the well,
+and by \eqref{eq:volume} that mass scales as $T^{\lambda}$ up to
+logarithms; so $\lambda$ does enter activated escape rates, through the
+masses of wells, which is exactly the role it plays in selection. The claim
+of this note is that $\lambda$ enters the dynamics \emph{only} in that
+role, not that it never appears.
+
+\section{Passage through flat sets}
+\label{sec:flat}
+
+\LKnown{} Hennick and De Baerdemacker argue that the time for isotropic
+diffusion to pass through a small flat region scales as $\eps^\lambda$
+divided by the capacitance of the escape set, which is treated as
+independent of $\eps$ \cite{hennick2026}. The argument has the attractive
+feature that it ties a training-time quantity to the volume exponent of
+\eqref{eq:volume}: the diffusion must ``fill'' a region of volume
+$\eps^\lambda$ before it finds the exit.
+
+\LCalc{} Consider diffusion with coefficient $D$ in the tube
+$W_\eps=\{K<\eps\}$ inside a fixed domain, reflecting on $\{K=\eps\}$ and
+absorbed at an escape set. For thin tubes the Fick--Jacobs reduction
+\cite{zwanzig1992,reguera2001} gives a one-dimensional problem along the
+zero set, with cross-section $A(s)$ and enclosed volume
+$V(s)=\int_0^sA(u)\,\dd u$. Starting at the centre, with reflection there by
+symmetry, the mean first-passage time is
+\begin{equation}
+T\approx\frac1D\int_0^{s_{\rm exit}}\frac{V(s)}{A(s)}\,\dd s .
+\label{eq:fj}
+\end{equation}
+The derivation is in Appendix~\ref{app:fj}. The reduction is the
+standard tool for diffusion through narrow channels with an entropic
+barrier: the density equilibrates quickly across each cross-section, and
+the slow motion along the channel feels the cross-section only through the
+``entropic potential'' $-\log A(s)$.
+
+Formula \eqref{eq:fj} already contains the answer. The volume $V$ is
+dominated by the bulk of the tube and scales as $\eps^\lambda$ up to
+logarithms, in agreement with \eqref{eq:volume}. But the integrand divides
+by the cross-section, and near the exit the cross-section is the exit
+window itself, which scales as $\eps^{\chiexit}$ for some exponent
+$\chiexit$ that depends on how the zero set meets the escape set. The
+integral is dominated near the exit, giving
+\begin{equation}
+T\;\propto\;\eps^{\lambda-\chiexit}\qquad\text{up to logarithms.}
+\label{eq:scaling}
+\end{equation}
+The capacitance of an escape window that is itself a cross-section of the
+tube scales with $\eps$; it is not constant. Three germs make this
+concrete, with $D=1$ for the numbers (details in
+Appendix~\ref{app:germs}).
+\begin{enumerate}
+\item $K=y^2$ in the unit disk ($\lambda=\tfrac12$). Here $A=2\sqrt\eps$
+and $V=2\sqrt\eps\,x$, so $T=\int_0^1x\,\dd x=1/(2D)$, independent of
+$\eps$.
+\item $K=x^2y^2$ in the unit disk ($\lambda=\tfrac12$, $m=2$). Here
+$A(x)=2\min(x,\sqrt\eps/x)$, $V(x)=\sqrt\eps+2\sqrt\eps\log(x\eps^{-1/4})$
+for $x>\eps^{1/4}$, and $T=\log(1/\eps)/(8D)+O(\sqrt\eps)$. The
+multiplicity survives as a logarithm.
+\item $K=x^4y^2$ in $[-1,1]^2$, absorbed only at $x=\pm1$ ($\lambda=\tfrac14$).
+Here $A(x)=\min(2,2\sqrt\eps/x^2)$, $V(x)=4\eps^{1/4}-2\sqrt\eps/x$ for
+$x>\eps^{1/4}$, and $T=\tfrac23\eps^{-1/4}/D-1/(2D)+O(\sqrt\eps)$: the
+time grows as $\eps\to0$.
+\end{enumerate}
+All three cases have $\chiexit=\tfrac12$, because in each the exit window
+is a cross-section of a tube of width $\sqrt\eps$ around a smooth branch of
+the zero set. The exponents $\lambda-\chiexit$ are $0$, $0$ and $-\tfrac14$,
+and the law $\eps^\lambda$ predicts a decreasing passage time in all three.
+
+\LNum{} Finite-difference solutions of the reflected-diffusion
+mean-first-passage problem in the full two-dimensional tube
+(\texttt{tube\_mfpt.py}) agree with \eqref{eq:fj}. The columns ``reduction''
+list the closed forms above without their $O(\sqrt\eps)$ remainders.
+
+\begin{center}\small
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+$\eps$ & (1) numerical & (2) numerical & (2) reduction & (3) numerical & (3) reduction & $\eps^\lambda$ law \\
+\midrule
+$10^{-2}$ & 0.500 & 0.620 & 0.576 & 1.835 & 1.608 & decreasing \\
+$10^{-3}$ & 0.504 & 0.883 & 0.863 & 3.434 & 3.249 & decreasing \\
+$10^{-4}$ & 0.500 & 1.150 & 1.151 & 6.253 & 6.167 & decreasing \\
+$10^{-5}$ & --- & 1.430 & 1.439 & 11.359 & 11.355 & decreasing \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The value 0.504 reflects grid alignment. In case (3) the fitted
+log--log slope is $-0.264$ overall and $-0.259$ on the last decade, against
+the predicted $-1/4$; in case (2) the slope of $T$ against $\log(1/\eps)$
+is $0.117$, against $1/8$. The agreement improves as $\eps$ decreases, as
+it should for an asymptotic reduction.
+
+\paragraph{Caveat.} The calculation uses a reflecting-tube caricature:
+isotropic diffusion confined to $\{K<\eps\}$ by a hard wall. The exact
+formulation of \cite{hennick2026} differs in how the region is defined and
+how the diffusion is confined, and whether the correction transfers to it
+will be checked with the authors, who receive a courtesy copy before this
+note is posted. The result is consistent with the order-one motion along
+zero sets found for Langevin dynamics of real-analytic potentials
+\cite{larsson2026}: motion along a flat set is not slow in the sense that
+the $\eps^\lambda$ law requires.
+
+\section{The discrete balanced chain}
+\label{sec:discrete}
+
+\LNum{} The continuous caricature is itself a step away from SGD, which
+takes discrete steps of size $\eta$ on minibatches of size $b$. The
+balanced update for the depth-$L$ chain with teacher $sx+q$ is
+\begin{equation}
+u_{k+1}=u_k+\eta\,u_k^{L-1}\bigl[(s-u_k^L)A_k+C_k\bigr],\qquad
+A_k=\frac1b\sum_{i=1}^b x_i^2,\quad C_k=\frac1b\sum_{i=1}^b q_ix_i,
+\label{eq:update}
+\end{equation}
+derived in Appendix~\ref{app:discrete}. The checks use $L=3$, $s=1$,
+Gaussian inputs, the initial value $w_0=10^{-3}$, the exit level
+$w_1=1/2$, and the clock $T=K\eta$ with $K$ the number of steps
+(\texttt{discrete\_sgd\_check.py}; 4000 paths per setting). The row
+``diffusion'' is the mean exit time of the continuous approximation,
+computed by exact quadrature; the row ``independent re-run'' is from an
+external reviewer of an earlier version of the research plan.
+
+\begin{center}\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+$\eta$ (with $b=1$, $\sigma_q=0$) & 0.01 & 0.1 & 1 & 3 & 10 & 100 \\
+\midrule
+This check & 9.19 & 9.75 & 13.98 & 20.70 & 38.3 & 179.0 \\
+Standard error & 0.007 & 0.021 & 0.063 & 0.12 & 0.24 & 1.3 \\
+Independent re-run & 9.19 & 9.79 & 14.05 & 20.7 & 38.7 & 182 \\
+Diffusion, exact quadrature & 9.15 & 9.51 & 14.25 & --- & 186.9 & 14278 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Three things follow. First, without label noise $A_k\ge0$, so
+every step moves $u$ towards the teacher and no path ever moves backward:
+the ``noise'' in this regime only modulates the speed. Second, the
+diffusion is accurate up to $r=\eta/b\approx1$ and then fails
+qualitatively. Its strong-noise power law, visible in the last two columns
+of the quadrature row, never appears in discrete SGD: at $\eta=100$ the
+discrete chain exits in fewer than two steps on average ($T/\eta\approx1.8$),
+so $T$ grows only linearly with $\eta$. Third, the small-step limit is
+reached smoothly from above, so the continuous approximation is a good
+description of the chain exactly where it is least interesting.
+
+\paragraph{Label noise and trapping.} \LNum{} With label noise
+($\sigma_q=1$, $\eta=1$, $b=1$; \texttt{trapped\_check.py}; 20{,}000 paths,
+$10^6$ steps), 179 paths did not exit ($0.90\%\pm0.07\%$) and 212 crossed
+zero. Every non-exiting path sits near
+$u\approx-1.0\times10^{-6}\approx-1/(\eta sk)$ after $k=10^6$ steps. The
+mechanism is visible in \eqref{eq:update} with $L=3$: for $u<0$ the drift
+$\eta su^2$ pushes $u$ towards zero from below ever more slowly, since the
+drift vanishes quadratically at the flat set, and returning above zero
+would require a noise kick $\eta u^2C_k$ of size $|u|$, that is, $|C_k|$ of
+order $1/(\eta|u|)$, which becomes astronomically unlikely as $u\to0^-$.
+The median exit time is 15 and the mean conditional on exit about 16.3;
+the unconditional mean is infinite. A reader who summarizes this
+distribution by its mean reports nothing; a reader who summarizes it by a
+function of $(\lambda_s,m_s)$, which are the same with and without label
+noise, misses the trapped population entirely.
+
+\paragraph{Exit time is not a function of $\eta/b$.} \LNum{} With
+$r=\eta/b=0.1$ fixed, $(\eta,b)=(0.1,1)$, $(1,10)$ and $(10,100)$ give
+$T=9.77$, $11.61$ and $29.71$ (independent re-run: $11.8$ and $29.6$ for
+the last two). The continuous approximation depends on $\eta$ and $b$ only
+through $r$; the discrete chain does not.
+
+\section{The positive lesson}
+\label{sec:lesson}
+
+What survives is the role that SLT assigns to $\lambda$ in the first place.
+\LKnown{} By \eqref{eq:localF}, $\lambda_U$ and $m_U$ fix the posterior mass
+of a region up to a prior-dependent constant, so they decide which of two
+regions the posterior prefers at sample size $n$, and by how much. The same
+quantities fix the redundancy of the Bayes mixture code,
+$F_n-nL_n(w_0)=\lambda\log n-(m-1)\log\log n+O(1)$, and the expected excess
+log loss $\lambda/n$ of the Bayes predictive \cite{watanabe2009}. These are
+statements about selection and evidence: about which solution the data
+support and how many bits that support is worth.
+
+Passage is a different kind of quantity. It depends on the drift along the
+flat set, on the noise covariance, on the cross-sections the process has to
+pass through, and on the step size, none of which are functions of the
+population loss alone, and all of which the four controls of
+Section~\ref{sec:impossibility} vary at fixed $(\lambda,m)$. Even the
+stationary law of SGD near a minimum is not the Gibbs law that SLT
+describes: for gradient noise shaped like the curvature the stationary
+covariance solves $H\Sigma+\Sigma H=(\eta/B)H$ \cite{mandt2017}, and a
+loss-fluctuation estimator of $\lambda$ applied to such a chain returns a
+curvature statistic rather than the learning coefficient. Estimating
+$\lambda$ from a sampler is therefore a question about the sampler
+\cite{lau2025llc,hitchcock2025,cai2026}, and reading $\lambda$ off a
+training trajectory is not the same as measuring it.
+
+\LHyp{} The author expects the same distinction to organize empirical
+results in developmental interpretability: where the local learning
+coefficient tracks a phase transition, it does so because the transition is
+a change in which region the posterior (or the tempered local posterior
+that the estimator samples) prefers, and not because $\lambda$ sets the
+time at which the optimizer crosses. A basin-selection account of grokking
+\cite{cullen2026} makes the same distinction in a different setting: the
+delayed generalization is explained by which basin the posterior selects at
+a given sample size, not by the passage time to it. That account and this
+note are complementary; neither predicts how long the crossing takes.
+
+\paragraph{Reproducibility.} All numbers in this note are taken from the
+research plan the note is drawn from. The numerical checks were produced by
+the archived scripts named there (\texttt{tube\_mfpt.py},
+\texttt{discrete\_sgd\_check.py}, \texttt{trapped\_check.py}) and will be
+released with the note. The four controls of Section~\ref{sec:impossibility}
+are stated with their results only; their derivations will be added as a
+companion appendix to the arXiv version. The research plan marks
+bibliographic entries not independently verified with a dagger\unv{}; none
+of the entries cited here carries that mark.
+
+\appendix
+\renewcommand{\theequation}{A.\arabic{equation}}
+\setcounter{equation}{0}
+
+\section{Derivations}
+\label{app:derivations}
+
+\subsection{The Fick--Jacobs reduction and the passage-time integral}
+\label{app:fj}
+
+\LKnown{} Let a particle diffuse with coefficient $D$ in a thin tube whose
+axis is parametrized by $s$ and whose cross-section at $s$ has measure
+$A(s)$, with reflecting walls. If the tube is thin enough that the density
+equilibrates across each cross-section much faster than it moves along the
+axis, the marginal density $p(s,t)$ along the axis obeys the Fick--Jacobs
+equation
+\begin{equation}
+\partial_tp=D\,\partial_s\Bigl[A(s)\,\partial_s\frac{p}{A(s)}\Bigr],
+\label{eq:fjpde}
+\end{equation}
+that is, one-dimensional diffusion in the entropic potential
+$U(s)=-\log A(s)$ \cite{zwanzig1992}; corrections for walls that are not
+slowly varying are discussed in \cite{reguera2001}. The generator is
+$\mathcal L=D\,e^{U}\partial_s(e^{-U}\partial_s)$ and the mean first-passage
+time $T(s_0)$ from $s_0$ to an absorbing point $s_{\rm exit}$, with a
+reflecting point at $s=0$, solves $\mathcal LT=-1$ with $T'(0)=0$ and
+$T(s_{\rm exit})=0$. Integrating twice,
+\begin{equation}
+T(s_0)=\frac1D\int_{s_0}^{s_{\rm exit}}\frac{\dd s}{A(s)}\int_0^{s}A(u)\,\dd u
+=\frac1D\int_{s_0}^{s_{\rm exit}}\frac{V(s)}{A(s)}\,\dd s,
+\qquad V(s)=\int_0^sA(u)\,\dd u.
+\label{eq:mfpt1d}
+\end{equation}
+\LCalc{} In the flat-set application the zero set extends to both sides of
+the starting point, and a start at the centre is equivalent, by symmetry, to
+a reflecting boundary at $s=0$; setting $s_0=0$ gives \eqref{eq:fj}. The
+reduction treats $\{K<\eps\}$ as a tube around a branch of the zero set
+whose cross-section at $s$ is the set of transverse displacements with
+$K<\eps$; for a germ $K=f(s)\,y^2$ this is the interval
+$|y|<\sqrt{\eps/f(s)}$, so $A(s)=2\sqrt{\eps/f(s)}$ wherever this is
+smaller than the transverse extent of the domain.
+
+The scaling \eqref{eq:scaling} follows from \eqref{eq:mfpt1d}. The total
+volume $V(s_{\rm exit})$ is the volume of the tube, which by
+\eqref{eq:volume} scales as $\eps^\lambda(\log1/\eps)^{m-1}$. Near the
+exit, $V(s)$ is of this order while $A(s)$ is of the order of the exit
+window, $\eps^{\chiexit}$. If $V/A$ is integrable up to the exit over a
+distance of order one, as in the three germs, the integral is of order
+$\eps^{\lambda-\chiexit}$ up to logarithms; if $A$ shrinks faster than $V$
+towards the exit, the integral is even more strongly dominated there. In no
+case is the dependence on the exit window a constant.
+
+\subsection{The three germs}
+\label{app:germs}
+
+\LCalc{} Throughout, $D=1$, $a:=\eps^{1/4}$, and the exit is at $x=1$ along
+the positive $x$-axis; the symmetric half-tube contributes the same by
+reflection.
+
+\paragraph{Germ 1: $K=y^2$ in the unit disk.} The tube is $|y|<\sqrt\eps$,
+so $A(x)=2\sqrt\eps$ for all $x$ up to the disk boundary, to leading order
+in $\eps$. Then $V(x)=2\sqrt\eps\,x$, $V/A=x$, and
+\begin{equation}
+T=\int_0^1x\,\dd x=\tfrac12,
+\end{equation}
+independent of $\eps$. The volume is $\propto\eps^{1/2}$ and so is the exit
+cross-section: $\lambda=\chiexit=\tfrac12$ and the exponent in
+\eqref{eq:scaling} vanishes. The numerical column (1) of the table in
+Section~\ref{sec:flat} shows $0.500$ at every $\eps$ computed.
+
+\paragraph{Germ 2: $K=x^2y^2$ in the unit disk.} The tube
+$\{x^2y^2<\eps\}$ is a cross with two branches along the axes; along the
+$x$-branch it is $|y|<\sqrt\eps/|x|$. The branches merge in the central
+square $|x|,|y|<a$, which the reduction splits between the two branches
+along its diagonals; the part belonging to the $x$-branch at abscissa $x<a$
+is $|y|<x$. Hence
+\begin{equation}
+A(x)=2\min\bigl(x,\sqrt\eps/x\bigr),\qquad
+V(x)=\begin{cases}x^2,&x\le a,\\[2pt]
+\sqrt\eps+2\sqrt\eps\log(x/a),&x>a,\end{cases}
+\end{equation}
+using $\int_a^x2\sqrt\eps\,u^{-1}\dd u=2\sqrt\eps\log(x/a)$ and
+$a^2=\sqrt\eps$. The central piece of the integral, $\int_0^a(x^2/2x)\,\dd x$,
+is $O(\sqrt\eps)$. For $x>a$,
+\begin{equation}
+\frac{V(x)}{A(x)}=\frac{x}{2}+x\log\frac{x}{a}
+=\frac{x}{2}+x\log x+\frac{x}{4}\log\frac1\eps ,
+\end{equation}
+and integrating from $a$ to $1$: $\int_a^1\tfrac x2\dd x=\tfrac14+O(\sqrt\eps)$,
+$\int_a^1x\log x\,\dd x=-\tfrac14+O(\sqrt\eps\log(1/\eps))$, and
+$\tfrac14\log(1/\eps)\int_a^1x\,\dd x=\tfrac18\log(1/\eps)+O(\sqrt\eps\log(1/\eps))$.
+The constants cancel and
+\begin{equation}
+T=\tfrac18\log\tfrac1\eps+O(\sqrt\eps).
+\end{equation}
+The multiplicity $m=2$ of the germ appears as the logarithm in the volume
+and survives in $T$; the exit cross-section is again $2\sqrt\eps$, so
+$\lambda=\chiexit=\tfrac12$ and the power vanishes.
+
+\paragraph{Germ 3: $K=x^4y^2$ in $[-1,1]^2$, absorbed only at $x=\pm1$.}
+The tube along the $x$-axis is $|y|<\sqrt\eps/x^2$, clipped by the box at
+$|y|=1$, so
+\begin{equation}
+A(x)=\min\bigl(2,\,2\sqrt\eps/x^2\bigr),\qquad
+V(x)=\begin{cases}2x,&x\le a,\\[2pt]
+2a+2\sqrt\eps\,(a^{-1}-x^{-1})=4a-2\sqrt\eps/x,&x>a,\end{cases}
+\end{equation}
+using $\sqrt\eps/a=a$. The box is reflecting at $y=\pm1$; the only exit is
+the cross-section at $x=1$, of width $2\sqrt\eps$. The central piece
+$\int_0^a(2x/2)\,\dd x$ is $O(\sqrt\eps)$. For $x>a$,
+\begin{equation}
+\frac{V(x)}{A(x)}=\frac{(4a-2\sqrt\eps/x)\,x^2}{2\sqrt\eps}
+=2\,\eps^{-1/4}x^2-x,
+\end{equation}
+and $\int_a^1(2\eps^{-1/4}x^2-x)\,\dd x=\tfrac23\eps^{-1/4}-\tfrac12+O(\sqrt\eps)$, so
+\begin{equation}
+T=\tfrac23\,\eps^{-1/4}-\tfrac12+O(\sqrt\eps).
+\end{equation}
+Here the volume of the tube is $\propto a=\eps^{1/4}$, in agreement with
+$\lambda=\tfrac14$, while the exit cross-section is $\propto\eps^{1/2}$:
+$\lambda-\chiexit=-\tfrac14$ and the passage time grows as $\eps\to0$. The
+fitted log--log slopes of the two-dimensional solution, $-0.264$ overall
+and $-0.259$ on the last decade, approach $-\tfrac14$ from below as the
+$-\tfrac12$ offset becomes negligible.
+
+\subsection{The discrete update}
+\label{app:discrete}
+
+\LCalc{} Take a linear chain of depth $L$ with scalar weights
+$w_1,\dots,w_L$, student output $(\prod_iw_i)x$, teacher output $sx+q$ with
+input $x$ and label noise $q$ of standard deviation $\sigma_q$, and the
+squared loss $\tfrac12\bigl[(\prod_iw_i)x-sx-q\bigr]^2$ per sample. The
+gradient with respect to $w_j$ is
+$\bigl(\prod_{i\ne j}w_i\bigr)\,x\,\bigl[(\prod_iw_i)x-sx-q\bigr]$. If all
+weights are equal, $w_i=u$, the gradient is the same for every layer, so
+equal weights stay equal under gradient descent and the chain is described
+by the single number $u$ with student output $u^Lx$. A minibatch step of
+size $\eta$ on $b$ samples gives
+\begin{equation}
+u_{k+1}=u_k-\eta\,u_k^{L-1}\,\frac1b\sum_{i=1}^b x_i\bigl[u_k^Lx_i-sx_i-q_i\bigr]
+=u_k+\eta\,u_k^{L-1}\bigl[(s-u_k^L)A_k+C_k\bigr],
+\end{equation}
+with $A_k=b^{-1}\sum_ix_i^2$ and $C_k=b^{-1}\sum_iq_ix_i$, which is
+\eqref{eq:update}. The flat set at $u=0$ has drift of order $u^{L-1}$,
+hence the plateau. Its invariants $(\lambda_s,m_s)=(1,L)$ refer to the full
+$L$-layer parametrization and are computed in the version-5 derivations;
+they are the same with and without label noise, because the label noise
+adds only the constant $\tfrac12\sigma_q^2$ to the population loss.
+\textbf{[TODO: confirm against the version-5 appendix that $(1,L)$ is the
+pair quoted for this saddle in the full parametrization.]}
+
+Two consequences used in Section~\ref{sec:discrete} are immediate. Without
+label noise, $C_k=0$ and $A_k\ge0$, so while $0<u_k^L<s$ every step
+increases $u_k$ and no path moves backward; the randomness of $A_k$ only
+modulates the speed. With label noise and $L=3$, a path that has crossed to
+$u<0$ has drift $\eta u^2(s-u^3)A_k\approx\eta su^2A_k>0$ towards zero from
+below, which vanishes quadratically, and the noise term $\eta u^2C_k$ must
+exceed $|u|$ for the path to return to $u>0$, so the required
+$|C_k|\gtrsim1/(\eta|u|)$ grows without bound as the path creeps towards
+zero. The observed resting positions $u\approx-1/(\eta sk)$ after $k$ steps
+are what the deterministic drift $\dot u=\eta su^2$ gives from any negative
+start, since its solution satisfies $-1/u(k)\approx\eta sk$ for large $k$.
+
+The continuous approximation referred to in Section~\ref{sec:discrete}
+replaces $A_k$ and $C_k$ by their means plus Gaussian fluctuations whose
+variance scales with $1/b$, and rescales time by $\eta$, which is why it
+depends on $(\eta,b)$ only through $r=\eta/b$. Its mean exit time was
+obtained by exact quadrature of the one-dimensional first-passage problem.
+The derivation of the diffusion and of its exit-time integral is in the
+version-5 material and will be included in the companion appendix.
+
+\begin{thebibliography}{99}\small\raggedright
+\setlength{\itemsep}{3pt}
+
+\bibitem{cai2026} Y.~Cai. Bypassing minimization bias: a shift-invariant
+variance estimator for off-equilibrium local learning coefficients.
+Preprint, arXiv:2606.22389, 2026.
+
+\bibitem{cullen2026} B.~Cullen, S.~Estan-Ruiz, R.~Danait and J.~Li. A
+basin-selection perspective on grokking via singular learning theory.
+Preprint, arXiv:2603.01192 (v3, May 2026).
+
+\bibitem{hennick2026} M.~Hennick and S.~De Baerdemacker. Almost Bayesian: dynamics of SGD through singular learning theory. \emph{ICLR 2026};
+arXiv:2503.22478 (v2, March 2026).
+
+\bibitem{hitchcock2025} R.~Hitchcock and J.~Hoogland. From global to local:
+a scalable benchmark for local posterior sampling. Preprint,
+arXiv:2507.21449 (v2, August 2026).
+
+\bibitem{larsson2026} M.~Larsson. Langevin dynamics along the zero set of
+real-analytic potentials. Preprint, arXiv:2608.09840, 2026.
+
+\bibitem{lau2025llc} E.~Lau, Z.~Furman, G.~Wang, D.~Murfet and S.~Wei. The
+local learning coefficient: a singularity-aware complexity measure.
+\emph{AISTATS 2025}, PMLR 258; arXiv:2308.12108.
+
+\bibitem{mandt2017} S.~Mandt, M.~D.~Hoffman and D.~M.~Blei. Stochastic
+gradient descent as approximate Bayesian inference. \emph{Journal of
+Machine Learning Research} 18(134):1--35, 2017.
+
+\bibitem{reguera2001} D.~Reguera and J.~M.~Rub\'i. Kinetic equations for
+diffusion in the presence of entropic barriers. \emph{Physical Review E}
+64:061106, 2001.
+
+\bibitem{watanabe2009} S.~Watanabe. \emph{Algebraic Geometry and
+Statistical Learning Theory}. Cambridge University Press, 2009.
+
+\bibitem{zwanzig1992} R.~Zwanzig. Diffusion past an entropy barrier.
+\emph{The Journal of Physical Chemistry} 96(10):3926--3930, 1992.
+
+\end{thebibliography}
+
+\end{document}

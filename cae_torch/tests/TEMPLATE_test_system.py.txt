@@ -1,0 +1,29 @@
+# Template for tests/test_<nn>_<name>.py (copy, rename, fill in). Not collected by pytest.
+import numpy as np
+import pytest
+import torch
+
+from cae_torch.reference import numpy_forward
+from cae_torch.systems.nn_name import TheSystem  # the torch translation
+
+
+@pytest.mark.parametrize("batch", [1, 8])
+def test_matches_numpy(cae_module, batch):
+    ref = cae_module("nn_name.py")
+    numpy_model = ref.build_model(...)            # whatever the original exposes
+    torch_model = TheSystem(...)                   # identical parameters
+    rng = np.random.default_rng(0)
+    # draw inputs for every input variable and interventions on a few internal variables
+    inputs = {...}
+    interventions = {...}
+    expected = numpy_forward(numpy_model, inputs, interventions)   # per-sample loop if needed
+    out = torch_model.forward_with_interventions(
+        {k: torch.as_tensor(v) for k, v in inputs.items()},
+        {k: torch.as_tensor(v) for k, v in interventions.items()},
+    )
+    for name in torch_model.variables:
+        np.testing.assert_allclose(out[name].numpy(), expected[name], atol=1e-9, rtol=1e-9)
+
+
+def test_gradients_flow_or_are_documented():
+    ...

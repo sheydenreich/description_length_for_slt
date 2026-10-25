@@ -1,0 +1,22 @@
+{
+ "lambda": null,
+ "n_min": 512,
+ "rows": [
+  {
+   "configuration": "trained/resid_1/subspace",
+   "seeds": 1,
+   "corrected_slope": 1173.0125434294328,
+   "seed_se": NaN,
+   "fit_se": 293.4705213478416,
+   "final_regret_nats": 5876.057569760829
+  },
+  {
+   "configuration": "trained/resid_2/subspace",
+   "seeds": 1,
+   "corrected_slope": 106.78445729874078,
+   "seed_se": NaN,
+   "fit_se": 30.40993602880124,
+   "final_regret_nats": 1174.929724674672
+  }
+ ]
+}

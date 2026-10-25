@@ -1,0 +1,2783 @@
+\documentclass[11pt,a4paper]{article}
+% Standalone research plan, 24 September 2026 (version 7.1, full-time).
+% Compile with latexmk -pdf, or run pdflatex twice.
+% Model assumptions, derivations, completed checks and bibliography are included below.
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\input{glyphtounicode}\pdfgentounicode=1
+\IfFileExists{lmodern.sty}{\usepackage{lmodern}\usepackage{microtype}}{\usepackage[expansion=false]{microtype}}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,longtable,enumitem,xcolor,framed}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,urlcolor=blue!55!black]{hyperref}
+\usepackage{bookmark,needspace}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\dd}{\mathrm d}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\DL}{\mathrm{DL}}
+\newcommand{\EDL}{\mathrm{EDL}}
+\newcommand{\IIA}{\mathrm{IIA}}
+\newcommand{\unv}{\textsuperscript{\dag}}
+\definecolor{cknown}{RGB}{20,100,40}
+\definecolor{ccalc}{RGB}{25,70,150}
+\definecolor{cnum}{RGB}{0,105,115}
+\definecolor{chyp}{RGB}{150,30,40}
+\definecolor{ctest}{RGB}{175,85,0}
+\definecolor{cassess}{RGB}{95,70,125}
+\newcommand{\evl}[2]{{\small\bfseries\color{#1}[#2]}}
+\newcommand{\LKnown}{\evl{cknown}{Known result}}
+\newcommand{\LCalc}{\evl{ccalc}{Internal calculation}}
+\newcommand{\LNum}{\evl{cnum}{Numerical check}}
+\newcommand{\LHyp}{\evl{chyp}{Hypothesis}}
+\newcommand{\LTest}{\evl{ctest}{Proposed test}}
+\newcommand{\LAssess}{\evl{cassess}{Assessment}}
+\newenvironment{hypbox}[1]{%
+  \def\FrameCommand{{\color{chyp}\vrule width 1.6pt}\hspace{8pt}}%
+  \MakeFramed{\advance\hsize-\width\FrameRestore}%
+  \noindent\textbf{#1}\par\smallskip\noindent\ignorespaces}{\endMakeFramed}
+\newenvironment{keybox}[1]{%
+  \def\FrameCommand{{\color{ccalc}\vrule width 1.6pt}\hspace{8pt}}%
+  \MakeFramed{\advance\hsize-\width\FrameRestore}%
+  \noindent\textbf{#1}\par\smallskip\noindent\ignorespaces}{\endMakeFramed}
+\setlist{itemsep=3pt,topsep=5pt}
+\setlength{\emergencystretch}{2em}
+\setcounter{tocdepth}{1}
+\title{\textbf{Bits of Evidence}\\[0.4em]
+\large When description lengths expose manufactured explanations,\\
+and what singular learning theory says about the codes\\[0.3em]
+\normalsize An 18-month research plan, version 7.1 (full-time)}
+\author{}
+\date{24 September 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+\noindent
+Interpretability and safety research make evidential claims about models,
+and the tools used to support those claims can manufacture them. An
+expressive alignment map can make an untrained network ``implement'' an
+algorithm; an elicitation procedure can ``reveal'' a capability it in fact
+teaches. This plan asks when information-theoretic measurements can tell
+genuine structure from structure supplied by the tool, and what singular
+learning theory (SLT) says about the codes involved. Log loss is a code
+length, sequential Bayesian prediction gives the mixture code whose
+redundancy SLT describes, and likelihood ratios support tests once their
+null distributions and sequential construction are specified.
+
+The flagship, Project~A, proceeds in two stages. Stage~1 measures
+\emph{alignment sample efficiency}: how many bits a specified alignment
+learner needs to make a network reproduce a fixed algorithm's
+counterfactual targets. Comparisons are made across trained and untrained
+networks, loci and map families on the same targets. The score is
+validated against distribution-shifted held-out accuracy and against
+causal-abstraction error with interventions on unmapped variables, on
+ground-truth models and on false explanations built to pass existing
+tests. Stage~2 is the ambitious goal: explanations as codes for the
+network's own interventional behaviour, in which competing causal
+abstractions, data-driven interfaces and capacity-matched black boxes
+predict the same network responses. It is positioned against recent work
+on prequential causal description length and applied to refusal and to
+deception probes.
+
+A theory strand establishes what prequential scores measure. Block codes
+multiply logarithmic coefficients by a computable batching factor;
+plug-in and gradient-trained predictors need not recover the learning
+coefficient; prior-dependent constants can dominate at attainable sample
+sizes; Bayes factors are e-values only against specified priors; and
+guaranteed tests against composite control families require certified
+likelihood bounds. SLT hypotheses are tested where the learning
+coefficient is known.
+
+Project~B, gated on validation, asks whether one independently measured
+geometric statistic---a local free-energy depth, first validated on small
+models with exactly computable basin masses---predicts whether a
+capability is recoverable under a stated adaptation protocol better than
+excess description length and calibrated uplift. Stretch goals include
+organisms with seven to eight billion parameters, susceptibility-based
+predictions of unlock cost and rare-output estimation.
+
+The plan opens with a six-week decision experiment and a pre-registered
+gate. It keeps its bold hypotheses, labels them as such, and pairs every gate with a stop rule. The document separates known results,
+internal calculations, completed numerical checks, hypotheses and proposed
+tests.
+\end{abstract}
+\newpage
+{\normalsize\tableofcontents}
+\newpage
+
+\section{Purpose, constraints and what changed}
+\label{sec:purpose}
+
+\subsection{The objective}
+
+Eighteen months remain on the current contract. The work should position
+the author for an AI-safety or interpretability role afterwards, in
+industry or academia. Applications will be written around months 12--15,
+so the visible record---preprints, posts and code---must exist by month
+12. Industry teams look for competent end-to-end experiments on real
+language models, at least one result the field discusses, and a
+distinctive strength. Academic committees look for main-venue papers with
+a coherent theme and theoretical depth. The distinctive strength here is
+calibrated statistical measurement: code lengths, Bayesian model
+comparison, sampler diagnostics and honest uncertainty.
+
+\paragraph{Working assumptions.} The author works on this programme full
+time: about twelve person-months before month 12 and eighteen in total.
+Compute is available and does not constrain the design. The binding
+constraints are the decision gates, engineering at the scale of billions
+of parameters, and the calendar of review cycles. Month 0 is October 2026.
+
+\subsection{What an external review changed}
+
+In September 2026 an external review of version 6.4 found that the move to
+description lengths puts SLT on firmer ground. It also found that the
+flagship's central score did not measure what the surrounding prose
+claimed, that close prior work was missing, that several bridges from
+operational measurements to SLT or to statistical guarantees were wrong,
+and that Project~B combined too many uncertain ideas. The review's factual
+claims were checked. The prior work exists and is close \cite{ma2026};
+excess description length subtracts the final model's test loss, not its
+training loss \cite{donoway2026}; and Sutter et al.\ already evaluate on
+held-out data \cite{sutter2025}. Table~\ref{tab:review} records how each
+point is treated. No point was rejected; two were modified.
+
+\begin{longtable}{@{}P{5.0cm}P{1.9cm}P{7.8cm}@{}}
+\caption{Treatment of the external review.}\label{tab:review}\\
+\toprule
+Review point & Status & Treatment in version 7 \\
+\midrule
+\endfirsthead
+\toprule
+Review point & Status & Treatment in version 7 \\
+\midrule
+\endhead
+The flagship score codes the algorithm's labels with the network, so it
+measures alignment sample efficiency, not bits of network behaviour
+explained & Adopted & Stage~1 is named and scoped accordingly; coding the
+network's own behaviour becomes Stage~2 (Sections~\ref{sec:stage1}
+and~\ref{sec:a1a2}). \\ \addlinespace
+Different candidate algorithms generate different target sets, so their
+code lengths are not comparable & Adopted & Stage~1 compares networks, loci
+and map families on fixed targets only; comparisons between algorithms
+move to Stage~2's common responses. \\ \addlinespace
+A network-free control that is given the algorithm achieves the minimum
+code length & Adopted & Every control's information access is specified;
+the label-only baseline has no access to the algorithm. \\ \addlinespace
+Close prior work on prequential causal description length & Adopted &
+Positioning rewritten; Stage~2 is designed as a comparison with, and
+extension of, \cite{ma2026}. \\ \addlinespace
+Held-out evaluation is already part of \cite{sutter2025} & Adopted,
+extended & Distribution-shifted held-out accuracy, which already breaks
+some manufactured alignments \cite{sutter2025}, becomes a primary rival. \\
+\addlinespace
+Smaller alignment maps do not imply smaller learning coefficients;
+elicitation need not mean small $\lambda$ & Adopted & Both are stated as
+hypotheses; prior-dependent constant terms are part of the analysis. \\
+\addlinespace
+Perfect IIA does not imply equal log loss & Adopted & Faithfulness is
+measured by log loss with a calibration check, and the regimes are defined
+by log loss. \\ \addlinespace
+Doubling blocks change the logarithmic coefficient & Adopted, extended & A
+general batching factor is derived and checked
+(Appendix~\ref{app:batch}); SLT comparisons use per-sample Bayes codes or
+corrected block codes. \\ \addlinespace
+EDL subtracts the final test loss & Adopted & Definition and decomposition
+corrected (Appendix~\ref{app:edl}). \\ \addlinespace
+E-values need conditional validity; universal inference needs the
+maximized null likelihood & Adopted & Guaranteed tests are restricted to
+control families with certified likelihood bounds, and sequential
+constructions use fresh data (Appendix~\ref{app:evidence}). \\ \addlinespace
+Complexity penalties cannot replace interventions on unmapped variables &
+Adopted & The intervention protocol includes unmapped variables. \\
+\addlinespace
+Project~B combines too many uncertain ideas; basin masses are hard to
+measure; ``suppressed'' needs an operational definition; adding data and
+replacing data differ & Adopted & Project~B is narrowed to one geometric
+statistic, validated first on small models with exact masses. Conclusions
+concern recoverability under a stated protocol; the addition formula is
+corrected and the flip is computed exactly by reweighting
+(Appendix~\ref{app:flip}). \\ \addlinespace
+Replace the three-paper commitment by a six-week decision experiment;
+allow equivalent valid abstractions & Adopted & Weeks 1--6 end in the
+review's gate criterion (Section~\ref{sec:gatesA}). \\ \addlinespace
+Remove numerical publication probabilities & Modified & The plan uses
+scenarios and readiness indicators (Section~\ref{sec:outlook});
+subjective probabilities are kept outside the plan. \\ \addlinespace
+Do not promise separate papers in advance & Modified & Papers are
+conditional on gates, but submission targets remain, because the record
+matters for the objective. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Why the plan remains ambitious}
+
+Narrowing the flagship's first claim does not lower its target. The goal
+is a validated, theoretically understood method for telling when an
+interpretability tool supplies the apparent explanation itself. Current
+practice cannot answer that question, and any safety argument that rests
+on interpretability depends on it. Stage~2 aims further, at a general way
+to score explanations as codes for a network's interventional behaviour.
+The theory strand aims at a precise account of what prequential scores
+measure, with SLT describing the Bayesian part. Project~B aims at an audit
+statistic whose validity is established rather than assumed. Each of these
+can fail. The plan accepts that risk, states its bold hypotheses as
+hypotheses, and pairs every gate with a stop rule, so that a failing direction is detected early, stopped and shared rather than extended.
+
+\Needspace{7\baselineskip}
+\paragraph{How to read this plan.} Section~\ref{sec:primer} explains the
+ideas needed later. Section~\ref{sec:projA} is the flagship with its theory
+strand, Section~\ref{sec:projB} the gated second project,
+Section~\ref{sec:p0} a short note on training dynamics, and
+Sections~\ref{sec:tools}--\ref{sec:risks} cover tooling, schedule, outlook
+and risks. Appendices collect derivations and completed checks.
+
+\Needspace{7\baselineskip}
+\paragraph{What the evidence labels mean.}
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[\LKnown] Established in the literature; the source is cited where
+used.
+\item[\LCalc] Worked out in this document under stated assumptions. The
+label implies neither novelty nor a completed proof.
+\item[\LNum] A completed computation, archived with code, that tests a
+displayed formula. It concerns the stated mathematical model, not observed
+training of large networks.
+\item[\LHyp] A claim the plan expects to be true and designs tests for.
+\item[\LTest] An experiment or theorem still to be completed.
+\item[\LAssess] A subjective judgement.
+\end{description}
+\noindent A dagger\unv{} on a reference marks bibliographic details that
+were not independently verified when this version was written.
+
+\section{Primer: bits, codes and singular learning theory}
+\label{sec:primer}
+
+\subsection{Log loss is a code length}
+
+\LKnown{} A predictive distribution $q$ that assigns probability $q(y)$
+to an outcome can be turned into a prefix code whose codeword for $y$
+has about $-\log_2 q(y)$ bits (Kraft's inequality), and no code does
+better on average than the entropy \cite{grunwald2007}. The cumulative
+log loss of a sequence of predictions is therefore, up to rounding, the
+length of a code for the observed labels. Formulas below use natural
+logarithms (nats); prose reports bits, with $1$ nat $\approx 1.44$ bits.
+
+\paragraph{Example.} Encoding 1000 fair-coin outcomes costs 1000 bits;
+nothing can be saved. If the coin in fact lands heads with probability
+0.9, a code that knows this needs about $1000\,h(0.9)\approx469$ bits,
+where $h$ is the binary entropy. A learner that must first discover the
+bias pays those 469 bits plus a small learning cost. The learning cost
+is where model complexity appears.
+
+\subsection{Three codes for the same data}
+
+\LKnown{} Let $D_n=\{(x_i,y_i)\}_{i\le n}$ be labelled data and
+$\{p(y\mid x,w)\}$ a model with prior $\varphi$.
+\begin{enumerate}[leftmargin=*]
+\item A \emph{two-part code} first describes a hypothesis, then the labels
+given the hypothesis.
+\item The \emph{Bayes mixture code} uses the marginal likelihood; its length
+is the Bayes free energy
+\begin{equation}
+F_n=-\log\int\prod_{i=1}^n p(y_i\mid x_i,w)\,\varphi(w)\,\dd w .
+\label{eq:freeenergy}
+\end{equation}
+\item A \emph{prequential code} \cite{dawid1984} predicts each label with a
+model fitted to the previous labels only:
+$L^A(n)=\sum_{i=1}^n-\log p^A_{i-1}(y_i\mid x_i)$ for a learning
+algorithm $A$.
+\end{enumerate}
+By the chain rule, the prequential code built from the Bayes predictive
+distribution is exactly the mixture code. Prequential codes built from
+SGD-trained networks are valid codes too \cite{blierollivier2018}, but
+they are not Bayes codes; the difference is analysed in
+Section~\ref{sec:projB}. In practice the data are coded in blocks: fit
+on the first $k$ blocks, code block $k+1$, and repeat
+\cite{voita2020,blierollivier2018}.
+
+\subsection{How complexity enters: regular versus singular models}
+
+\LKnown{} For a regular model with $d$ identifiable parameters and
+positive-definite Fisher information,
+$F_n=nL_n(w_0)+\tfrac d2\log n+O_p(1)$, where $L_n$ is the average
+negative log likelihood and $w_0$ the optimal parameter
+\cite{rissanen1986,clarkebarron1990}. Neural networks are singular:
+many parameters give the same function and the Fisher matrix is
+degenerate. Watanabe proved
+\begin{equation}
+F_n=nL_n(w_0)+\lambda\log n-(m-1)\log\log n+O_p(1),
+\label{eq:watanabe}
+\end{equation}
+where $\lambda\le d/2$ is the learning coefficient (real log canonical
+threshold) and $m$ its multiplicity \cite{watanabe2009}. Equivalently,
+the expected excess log loss of the Bayes predictive at sample size $n$
+is $\lambda/n$. Two-part codes with the same $\lambda\log n$ redundancy
+exist for singular models, and the local learning coefficient tracks
+the compressibility of trained language models \cite{urdshals2025}.
+Local versions of $\lambda$ at a particular solution are estimated by stochastic-gradient Langevin dynamics \cite{lau2025llc}. The constant term depends on the prior: two regular models of the same dimension share $\lambda=d/2$ even when their priors make one target far easier to learn, so finite-sample code lengths can differ in terms that $\lambda$ does not see.
+
+\paragraph{Worked example.} \LCalc{} Take $y=abx+\text{noise}$ with two
+parameters $(a,b)$. Counting parameters suggests a complexity term
+$\tfrac d2\log n=\log n$. But the parameters with the correct product
+form a curve when the true coefficient $c^*=ab$ is nonzero, and the
+union of two axes when $c^*=0$. Both cases have $\lambda=1/2$, with
+$m=1$ and $m=2$ respectively. At $n=10^4$ the complexity term is
+$\tfrac12\ln10^4\approx4.6$ nats ($6.6$ bits) instead of $9.2$ nats
+($13.3$ bits). Parameter counting doubles the cost here. For the
+overparameterized families used as alignment maps and adapters the gap
+can be much larger; reduced-rank regression is a solved example
+\cite{aoyagiwatanabe2005}.
+
+\subsection{When a family cannot compress: minimax regret}
+
+\LKnown{} For a family $\mathcal H$ of predictors and fixed inputs, the
+smallest achievable worst-case regret of a code relative to the best
+member in hindsight is
+$\log\sum_{y^n}\sup_{h\in\mathcal H}p_h(y^n\mid x^n)$, the normalizer of
+the normalized maximum likelihood code \cite{shtarkov1987,grunwald2007}.
+If a family of deterministic predictors realizes every labelling of $n$
+items over an alphabet $\mathcal Y$, the sum has $|\mathcal Y|^n$ unit
+terms and the regret is $n\log|\mathcal Y|$. A family that can fit
+anything cannot compress anything. This is the information-theoretic
+content of the dilemma addressed in Section~\ref{sec:projA}.
+
+\subsection{Local free energy and posterior mass}
+
+\LKnown{} For a region $U$ of parameter space, the local free energy
+\begin{equation*}
+F_U(n)=-\log\int_U e^{-nL_n(w)}\varphi(w)\,\dd w
+\end{equation*}
+has the expansion
+\eqref{eq:watanabe} with local values $(\lambda_U,m_U)$ plus a constant
+$c_U$ \cite{watanabe2009}. Posterior odds between regions are
+$\exp[-(F_{U_1}-F_{U_2})]$. Tempering at inverse temperature $\beta$
+replaces $n$ by $n\beta$. Stochastic-gradient MCMC samples localized,
+tempered posteriors; the estimator $\hat\lambda=n\beta\,(\E_\beta
+L_n-L_n(w^*))$ is standard \cite{lau2025llc}. Its reliability depends
+on sampler settings and on whether $w^*$ is a minimum
+\cite{hitchcock2025,cai2026}. Posterior-covariance statistics of this
+kind have been estimated for networks with billions of parameters
+\cite{kreer2026}.
+
+\subsection{Excess description length}
+
+\LKnown{} Excess description length (EDL) is the prequential code length of the fine-tuning labels under online training, minus $n$ times the final model's expected loss on fresh data, its test loss. Subtracting test loss rather than training loss means that memorizing random labels earns no credit. EDL is nonnegative in expectation under conditions on the learning procedure, converges to surplus description length, and is defined relative to a specific training algorithm \cite{donoway2026}. An
+empirical companion reports that eliciting a latent capability needs
+orders of magnitude less information than teaching a new one
+\cite{bitsthatcount2026}. A related study fits a logistic curve relating
+the number of trained parameters to recovery of a capability gap
+\cite{elicitation2025}.
+
+\subsection{E-values: evidence with error guarantees}
+\label{sec:evalues}
+
+\LKnown{} An e-value for a null hypothesis is a nonnegative statistic $E$
+whose expectation is at most one under every distribution in the null. By
+Markov's inequality, rejecting when $E\ge1/\alpha$ has type-I error at most
+$\alpha$. Unlike p-values, e-values keep this guarantee under optional
+continuation---deciding to collect more data after seeing earlier
+results---and can be combined across studies
+\cite{grunwald2024safe,ramdas2023}. A running likelihood ratio that is a
+nonnegative martingale under the null gives anytime-valid monitoring
+through Ville's inequality. Two constructions matter here. A Bayes factor
+$q_1(y^n)/q_0(y^n)$ between two mixture codes is an e-value against the
+simple null that the data follow $q_0$, and growth-rate-optimal e-values for
+composite nulls also take the form of Bayes factors with special priors
+\cite{grunwald2024safe}. Universal inference turns any prequential likelihood, or one fitted on separate data, into an e-value against a composite null by dividing it by the null's maximized likelihood \cite{wasserman2020}. The maximum must be computed exactly or bounded from above; an optimizer's best value is only a lower bound and would inflate $E$. Multiplying e-values from successive rounds requires each to be valid conditionally on the past, $\E[E_t\mid\mathcal F_{t-1}]\le1$ under the null. Sequential likelihood ratios satisfy this by construction under the null that defines them; repeated calibrations of the same audited object need not, even with fresh data. In bits, $\log_2E$ is the
+evidence: $E=2^{10}$ rejects at level about $10^{-3}$. Universal codes, the backbone of MDL, are natural sources of e-values with small regret; unifying description-length model selection with e-value testing is an open problem.
+
+\subsection{Susceptibilities: how the local posterior responds to data}
+\label{sec:suscept}
+
+\LKnown{} Susceptibilities treat a trained network as a Bayesian
+statistical-mechanical system \cite{baker2026}. Shift the data distribution
+slightly from $q$ towards $q'$ and ask how the posterior expectation of an
+observable $\phi$ localized on a component responds. \LCalc{} With
+$q_h=(1-h)q+hq'$ and the tempered local posterior proportional to
+$\exp[-n\beta L_h(w)]\varphi(w)$,
+\begin{equation}
+\chi_\phi=\frac{\dd}{\dd h}\E_h[\phi]\Big|_{h=0}
+=-n\beta\,\mathrm{Cov}\bigl(\phi,\,L_{q'}-L_q\bigr),
+\label{eq:suscept}
+\end{equation}
+up to the normalization conventions of \cite{baker2026}. This describes a shift at fixed data size; adding data instead changes the formula (Appendix~\ref{app:lr}). The covariance is
+estimated from local SGLD samples and splits into per-token contributions.
+Response matrices built from many shifts separate functional modules such
+as induction and multigram heads \cite{baker2026}, and clusters found in a
+14M-parameter model remain coherent in models up to 1.4B parameters
+\cite{gordon2026}. Inverting the linear response gives \emph{patterning}:
+choosing training data that steers internal structure, including which of
+several perfect algorithms a small model learns, by targeting the local
+learning coefficient of each solution \cite{wangmurfet2026}; a follow-up
+applies the idea to debiasing reward models \cite{patterningpractice2026}.
+Informally, \eqref{eq:suscept} says how strongly data from $q'$ would move the posterior's view of $\phi$, that is, how informative such data would be about that component.
+
+\subsection{Causal abstraction in one page}
+
+\LKnown{} A high-level causal model, here an algorithm $A$ with
+intermediate variables $V$, is related to a network $N$ through an
+\emph{interchange intervention}. Run $N$ on a base input $b$, but
+replace the part of an internal representation aligned with $V$ by its
+value on a source input $s$. The algorithm predicts the counterfactual
+output $A(b;V\leftarrow V(s))$. Interchange-intervention accuracy (IIA)
+is the fraction of pairs on which the intervened network agrees with
+that prediction \cite{geiger2025ca}. Distributed alignment search learns
+the alignment, typically a rotation, by gradient descent \cite{geiger2024das}.
+
+Sutter et al.\ proved that unrestricted alignment maps make any network
+implement any algorithm under mild conditions. With nonlinear maps they
+reached perfect IIA on the indirect-object-identification task in
+randomly initialized language models, and they conclude that no principled way currently exists to trade map complexity against accuracy \cite{sutter2025}. Their maps generalize to unseen test pairs, but when training and test pairs use disjoint sets of names, the alignment learned on an untrained model fails to generalize: distribution-shifted held-out tests already expose some manufactured alignments. They also observed that the map complexity needed for
+perfect alignment falls as training proceeds. Causal abstractions need
+not be unique \cite{meloux2025ident}. A new benchmark of ten simulated
+systems with valid and invalid abstractions evaluated more than thirty
+metrics; only causal metrics that also test faithfulness on unmapped
+variables discriminated reliably \cite{meloux2026}. Ground-truth
+testbeds exist: compiled transformers \cite{tracr2023}, semi-synthetic
+transformers with known circuits \cite{interpbench2024}, and a benchmark
+whose causal-variable track found distributed alignment search best \cite{mib2025}. Closest to this plan, Ma et al.\ compare candidate interface architectures in language models by prequential causal description length over ``forked futures''---response distributions of operations sampled after a hidden state has formed---and support their conclusions with transplantation, mediation and a blind model-organism test \cite{ma2026}.
+
+\subsection{Hidden capabilities in one page}
+
+\LKnown{} Language models can be prompted or fine-tuned to underperform
+strategically (``sandbagging'') \cite{vanderweij2024}.
+Password-locked models, which perform well only when a trigger is
+present, are standard proxies \cite{greenblatt2024}. Unlearning methods
+aim to remove hazardous knowledge \cite{li2024wmdp}, but removed
+knowledge is often recoverable \cite{lucki2024}. Injecting noise into
+the weights raises the accuracy of sandbagging models while honest
+models degrade, which gives a detection signal \cite{tice2025}. In an
+adversarial auditing game, however, a blinded team could not reliably
+separate sandbagging from benign models. Probes were promising but were
+confused by distractor behaviours, and fine-tuning on a single
+demonstration elicited every sandbagger but also improved benign models
+\cite{taylor2025}. What is missing is a calibrated null: how much
+improvement, or how few bits, should we expect from a model that is not
+hiding anything?
+
+\paragraph{Rare outputs.} \LKnown{} A related problem is estimating the
+probability of a harmful output too rare to observe by sampling.
+Importance sampling outperforms extrapolation from activations for small
+transformers \cite{wuhilton2025}, and proposal models built by activation
+steering estimate rare harmful, hallucinated and sycophantic outputs with
+about 5\% of the samples plain Monte Carlo needs \cite{angell2026}.
+
+\section{Project A (flagship): when do description lengths expose manufactured explanations?}
+\label{sec:projA}
+
+\subsection{The question}
+
+An interpretability claim is only as good as the analysis tool's inability
+to produce it spuriously. Sutter et al.\ showed that expressive alignment
+maps make causal abstraction vacuous \cite{sutter2025}. Méloux et al.\
+showed that most metrics fail to separate valid from invalid abstractions
+unless they test interventions on unmapped variables \cite{meloux2026}. Ma
+et al.\ proposed prequential causal description length for choosing between
+interface architectures \cite{ma2026}. The flagship asks the question these
+results leave open: \emph{under what conditions do description-length
+measurements distinguish genuine causal structure from alignments
+manufactured by an expressive analysis tool, and what exactly do the
+measurements quantify?} A strong answer combines positive results, clear
+counterexamples, a validated protocol and a theory of the codes. It matters
+for safety because probes, directions and circuits increasingly appear in
+safety arguments, and a method that cannot tell when the tool supplied the
+explanation cannot certify them.
+
+\subsection{Stage 1: alignment sample efficiency}
+\label{sec:stage1}
+
+\LCalc{} Fix an algorithm $A$ with intermediate variables $V$ and a
+distribution over base and source inputs $(b,s)$. The targets are the
+algorithm's counterfactual outputs $y^*(b,s)=A(b;V\leftarrow V_A(s))$,
+passed through randomized response with a known small noise rate. A
+\emph{configuration} is a network $N$, a locus $\ell$ and an alignment
+learner, that is, a map family $\Phi$ with a prior or training procedure.
+Its prequential code length on the fixed targets is
+\begin{equation}
+\DL(n)=\sum_{i=1}^n-\log N_{\hat\theta_{i-1}}(b_i,s_i)\bigl[y^*_i\bigr],
+\label{eq:dlh}
+\end{equation}
+where $N_\theta(b,s)$ is the output distribution of $N$ on $b$ with the
+aligned part of $h_\ell(b)$ replaced by its value on $s$, and
+$\hat\theta_{i-1}$ is fitted on the first $i-1$ pairs.
+
+\paragraph{What the score measures.} $\DL(n)$ is the cost, in bits, for a
+specified alignment learner to make this network reproduce this
+algorithm's counterfactual targets. It does not count bits of the
+network's behaviour explained by the algorithm: the labels come from the
+algorithm, and the network serves as the predictor. The score becomes
+informative through comparisons on the \emph{same} targets. The gain
+$G(n)=\DL_{\rm control}(n)-\DL(n)$ compares a configuration with a control
+that differs in one respect: an untrained network of the same
+architecture, a locus before $V$ can be computed, or a different map
+family. Every learner sees the inputs only through the network's
+representation at its locus and the network's fixed readout, and none has
+access to $A$. A label-only code that sees neither the network nor $A$
+normalizes for the difficulty of the targets.
+
+\paragraph{Faithfulness in log loss.} Interchange-intervention accuracy
+(IIA) measures agreement of the most probable output. Two configurations
+can both reach perfect accuracy while assigning the correct label
+probabilities 0.51 and 0.99. The plan therefore measures faithfulness by
+log loss, checks calibration, and defines the regimes below by log loss
+rather than accuracy.
+
+\begin{keybox}{Decomposition on fixed targets (internal calculation).}
+For Bayes codes over families that satisfy the conditions behind
+\eqref{eq:watanabe},
+\begin{equation}
+G(n)=n\,\Delta\ell+\Delta\lambda\log n-\Delta(m-1)\log\log n+R_n+O_p(1),
+\label{eq:gain}
+\end{equation}
+where $\Delta\ell$ is the gap in optimal per-pair log loss, $\Delta\lambda$
+and $\Delta m$ are the gaps in learning coefficient and multiplicity at the
+respective optima, and $R_n$ is the difference of centred empirical losses.
+If both configurations reproduce the law of the randomized-response targets
+exactly, they make identical predictions and $\Delta\ell=R_n=0$. The
+$O_p(1)$ terms depend on the priors and need not be small at attainable
+$n$: two regular families of equal dimension share $\lambda=d/2$ even when
+their priors make one target much easier to learn. Derivation:
+Appendix~\ref{app:codes}.
+\end{keybox}
+
+\paragraph{Three regimes.} \LCalc{} If the control cannot match the
+configuration's log loss ($\Delta\ell>0$), the gain grows linearly and the
+control can be rejected: the falsification regime. If both reproduce the same conditional target law, the gain grows at most logarithmically: the Occam regime. There, no valid test can reject a
+control family that contains the target law, and the evidence is
+necessarily relative to the priors or learners involved (Section~\ref{sec:atests}). Equal expected log loss is not enough: two different predictors with equal expected loss leave the fluctuation term $R_n$, which can grow like $\sqrt n$, and calibration alone does not make their conditional predictions equal. If neither fits, the comparison concerns
+approximation quality and is read together with the faithfulness gap.
+Untrained networks with expressive maps are candidates for the Occam
+regime on i.i.d.\ splits; distribution-shifted splits can move them into
+the falsification regime \cite{sutter2025}.
+
+\subsection{What prequential scores measure}
+\label{sec:atests}
+
+The theory strand makes four statements precise; each has a proof target
+below.
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[Batching.] \LCalc{} If block boundaries grow geometrically by a
+factor $r$ and the learner's expected excess log loss after $m$ examples is
+$\kappa/m$, the cumulative excess is $\kappa\frac{r-1}{\ln r}\log n+o(\log n)$, with an $O(1)$ remainder when the learning curve's own remainder is $O(m^{-1-\delta})$ for some $\delta>0$.
+Doubling blocks multiply the coefficient by $1/\ln2\approx1.44$, even for
+Bayes predictors frozen within blocks; per-sample updating recovers $\kappa\log n$. In singular models with multiplicity above one, the Bayes learning curve carries a term of order $1/(m\log m)$, which accumulates into a $\log\log n$ correction. \LNum{} Exact computations for a Gaussian mean confirm the
+factor to three decimals for plug-in and Bayes predictors
+(Appendix~\ref{app:batch}).
+\item[Learner coefficients.] \LKnown{} For the Bayes predictive,
+$\kappa=\lambda$ \cite{watanabe2009}. \LCalc{} For plug-in or
+gradient-trained predictors, $\kappa$ is the learner's own generalization
+coefficient, which need not equal $\lambda$ in singular models. SLT
+therefore describes Bayes codes directly and other codes only through a
+separate comparison of $\kappa$ with $\lambda$.
+\item[Priors.] \LCalc{} At attainable $n$, the prior-dependent terms of
+\eqref{eq:gain} can dominate the logarithmic term, so every interpretation
+in terms of $\lambda$ is a hypothesis to be tested.
+\item[Tests.] \LCalc{} A Bayes factor is an e-value against the control's
+prior predictive, and its sequential version is a test martingale under
+that null. Universal inference gives a prior-free e-value against a
+composite control family only if the family's maximized likelihood can be
+bounded from above with certainty. That is possible for convex families,
+such as logistic readouts on fixed features, where duality gaps certify
+the maximum. For neural control families an optimizer supplies only a
+lower bound, and no guarantee is claimed. Products of e-values are used only where conditional validity holds for the full history, as for sequential likelihood ratios; otherwise evidence is combined by prespecified weighted averages. Details: Appendix~\ref{app:evidence}.
+\end{description}
+
+\subsection{Stage 1 validation: the decision experiment}
+
+The first six weeks test whether Stage~1 adds value, with manufactured
+explanations as the adversary.
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[Exact examples, weeks 1--2.] Gaussian and small singular models in
+which Bayes redundancy, batching effects and optimizer effects can be
+separated exactly, reusing the conjugate machinery of version 5.
+\item[Ground truth and manufactured alignments, weeks 3--4.] Compiled
+transformers \cite{tracr2023}, semi-synthetic models with known circuits
+\cite{interpbench2024} and the causal-variable tasks of \cite{mib2025}.
+Manufactured alignments are built to pass existing tests: expressive maps
+on untrained networks that reach high held-out accuracy
+\cite{sutter2025}, alignments at wrong loci that pass independent and
+identically distributed (i.i.d.)\ splits, and alignments of wrong
+algorithms onto networks that compute correlated variables.
+\item[Strong baselines on unseen tasks, weeks 5--6.] I.i.d.\ held-out IIA;
+distribution-shifted held-out IIA, for example with disjoint vocabularies
+\cite{sutter2025}; the causal abstraction error with interventions on
+unmapped variables \cite{meloux2026}; online probing codes without controls
+\cite{voita2020}; and accuracy against map size \cite{pimentel2020pareto}.
+The metric diagnostics D1--D3 of Appendix~\ref{app:topo} are computed for
+every alignment.
+For token-valued variables the Jacobian-lens alignment of
+Appendix~\ref{app:topo-jlens} is added as a parameter-free rival.
+\end{description}
+
+\begin{hypbox}{H-A1 (rejecting convincing false explanations).}
+Stage~1 gains, computed against untrained-network and wrong-locus controls
+on fixed targets, reject manufactured alignments that pass
+distribution-shifted held-out tests and the causal abstraction error, while
+retaining valid explanations. A valid explanation counts as retained if
+any member of its equivalence class of abstractions is retained.
+\end{hypbox}
+
+\begin{hypbox}{H-A2 (training trajectories).}
+Along training checkpoints of a network that learns the task, the gain
+against the untrained-network control rises with task competence, while
+i.i.d.\ held-out IIA with expressive maps stays near its maximum throughout,
+as Sutter et al.\ observed \cite{sutter2025}.
+\end{hypbox}
+
+\begin{hypbox}{H-A3 (SLT on known ground).}
+In map families whose learning coefficients are known, per-sample Bayes
+codes---or block codes corrected by the batching factor---have logarithmic
+gain coefficients that match $\Delta\lambda$ within stated error, and the
+prior-dependent terms are small enough at attainable $n$ for the match to
+be observable.
+\end{hypbox}
+
+\begin{hypbox}{H-A4 (a complete protocol on the benchmark).}
+On the benchmark of \cite{meloux2026}, a protocol that combines Stage~1
+gains with interventions on unmapped variables discriminates valid from
+invalid abstractions better than either component alone.
+\end{hypbox}
+
+\subsection{Stage 2: explanations as codes for network behaviour}
+\label{sec:a1a2}
+
+\LTest{} Stage~2 codes the network's own responses, so that competing
+explanations predict the same observations. An intervention protocol fixes
+a distribution over inputs and interventions: interchange interventions at
+the loci that explanations name, interventions on variables they leave
+unmapped, and random-direction controls. The data are the network's output
+distributions under these interventions or, following \cite{ma2026},
+distributions over future operations. Each explanatory model receives a
+stated set of information: the input, a description of the intervention,
+and nothing about the network's internals beyond what the explanation
+posits. The competitors are causal abstractions with their alignment
+families, data-driven interfaces of the kind compared in \cite{ma2026},
+and capacity-matched black-box predictors of intervened outputs. Models
+are scored by the prequential code length of the network's responses;
+e-values against tractable null families give guaranteed rejections; and
+the complexity of explanation families enters through their learning
+coefficients where these are known.
+
+\paragraph{What counts as one observation.} Before any comparison, Stage~2
+fixes the unit of observation: a sampled output under an intervention, an
+exactly available probability vector, or a distribution estimated from a
+stated number of samples. Cross-entropy against a probability vector is an
+expected coding loss, not the likelihood of an observation, and the choice
+changes the meaning of $n$, of Bayesian complexity penalties and of
+e-values. The intervention protocol is frozen before scoring, so that
+candidate explanations cannot change the experiment on which they are
+judged.
+
+\paragraph{Independent justification.} Stage~2 asks whether explanations
+compress the network's own behaviour, a question Stage~1 cannot answer, so
+it does not inherit its justification from Stage~1. It proceeds only after
+a two-week pilot on one ground-truth model shows that shared-response codes
+separate a valid abstraction from a manufactured one.
+
+\begin{hypbox}{H-A5 (explanations beat black boxes on shared data).}
+On ground-truth models, valid causal abstractions code the network's
+interventional responses more briefly than capacity-matched black-box
+predictors and than manufactured explanations, and the differences survive
+correction for batching and prior effects.
+\end{hypbox}
+
+\paragraph{Relation to forked futures.} Ma et al.\ compare Shared, Local,
+Mixture and Distributed interfaces by prequential causal description length
+under fidelity and capacity constraints. They report held-out gains on
+Qwen2.5-1.5B and Llama-3-8B and add transplantation, mediation and a blind
+model-organism test \cite{ma2026}. Stage~2 differs in three ways. It tests
+researcher-specified causal abstractions, including deliberately
+manufactured ones, against data-driven interfaces and black boxes; it
+comes with a theory of what the codes measure; and it offers guaranteed
+tests where they exist. Their results are treated as preprint claims, to be
+reproduced where possible, and the authors are natural collaborators.
+
+\paragraph{Applications.} If Stage~2 works on ground truth, it is applied
+first to refusal, whose behaviour and interventions are comparatively
+concrete \cite{arditi2024}, and then to deception and sandbagging probes
+\cite{goldowskydill2025}. Sparse-autoencoder and transcoder features
+\cite{mib2025} and components singled out by susceptibility clusters
+\cite{baker2026,gordon2026} enter as candidate variables.
+
+\begin{hypbox}{H-A6 (safety directions).}
+For refusal and deception directions in open language models, explanation
+codes separate directions that causally mediate the behaviour from
+directions that only predict it, and their ranking agrees with causal
+ablations more often than probe accuracy does. A direction that explains few bits relative to its controls offers little incremental evidence of mediation under the chosen learners and controls. Limited data or an unsuitable learner can also produce low gain, so such a result calls for scrutiny of monitors built on the direction rather than a verdict on it.
+\end{hypbox}
+
+\begin{hypbox}{H-A7 (a data-side check).}
+For valid abstractions, observables on the aligned subspace---for example,
+the expected aligned coordinate over a fixed probe set, as a function of
+the weights---are markedly more susceptible to data shifts that change the
+distribution of $V$ than to shifts that do not. For manufactured alignments
+this selectivity is absent.
+\end{hypbox}
+
+\subsection{Proof targets}
+
+\begin{keybox}{Theory targets.}
+\begin{description}[style=nextline,leftmargin=1.2em]
+\item[T1, decomposition on fixed targets.] A rigorous version of
+\eqref{eq:gain} with randomized-response targets, explicit conditions, and
+the fluctuation and prior terms. Status: follows from Watanabe's theorem
+applied to each code; to be written out.
+\item[T2, label-only control.] Relabelling-invariant priors give zero gain
+against the label-only code. Status: proved (Appendix~\ref{app:codes}).
+\item[T3, batching factor.] For learners with excess loss
+$\kappa/m+o(1/m)$ and geometric blocks, the cumulative excess is $\kappa\frac{r-1}{\ln r}\log n+o(\log n)$, with an $O(1)$ remainder when the learning curve's own remainder is $O(m^{-1-\delta})$ for some $\delta>0$. Status: derived, and checked exactly
+for the Gaussian mean (Appendix~\ref{app:batch}); the general statement is
+routine to write out.
+\item[T4, learner coefficients.] Conditions under which a learner's
+coefficient $\kappa$ equals $\lambda$, and singular families in which
+plug-in predictors have $\kappa\neq\lambda$. Status: open.
+\item[T5, tests.] Validity of Bayes-factor e-values against a control's
+prior predictive, of universal-inference e-values for control families
+with certified likelihood bounds, and of sequential products with fresh
+data. Status: follows from standard e-value theory
+\cite{grunwald2024safe,wasserman2020}; to be written for this setting.
+\item[T6, untrained-network control.] Conditions under which a
+structureless injective encoding forces a larger complexity term than a
+network that computes $V$. Status: hypothesis.
+\item[T7, metric certificates.] Finite realizability by diffeomorphisms, the
+stretch budget and its persistence form, interleaving and realizability
+bounds, and the prior mass of distortion. Status: proved or sketched in
+Appendix~\ref{app:topo-protocol}; the link between distortion and learning
+coefficients is open.
+\end{description}
+\end{keybox}
+
+\subsection{Rivals, neighbours and positioning}
+
+The rivals are i.i.d.\ and distribution-shifted held-out IIA
+\cite{sutter2025}; the causal abstraction error with interventions on
+unmapped variables \cite{meloux2026}; online probing codes \cite{voita2020}
+and control tasks \cite{hewittliang2019}; accuracy against complexity
+\cite{pimentel2020pareto}; and prequential causal description length over
+forked futures \cite{ma2026}. Neighbours include a category-theoretic
+framework grounding mechanistic explanation in minimum description length
+\cite{gauderis2026}, description-length views of sparse autoencoders
+\cite{ayonrinde2024}, proof length as a measure of understanding
+\cite{gross2024}, the use of loss-landscape degeneracy for interpretability
+\cite{bushnaq2024}, ARC's surprise accounting \cite{hilton2024} and
+susceptibilities \cite{baker2026}.
+
+Project~A's distinctive contributions are four: adversarial validation
+against manufactured explanations and the strongest current baselines; a
+theory of what prequential scores measure, with SLT describing the
+Bayesian part; Stage~2's comparison of researcher-specified abstractions,
+data-driven interfaces and black boxes on shared data; and safety
+applications with guaranteed tests where these exist.
+
+\subsection{Gates and outputs}
+\label{sec:gatesA}
+
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[G-A0, end of week 2.] The exact examples separate Bayes redundancy,
+batching and optimizer effects, and reproduce the batching factor.
+\item[G-A1, end of week 6 (mid-November 2026): the decision gate.] Does the
+Stage~1 score reject convincing false explanations that the strongest
+baselines accept, while retaining valid explanations up to equivalence?
+If it passes, the method paper is written for ICML 2027, whose deadline is
+estimated for late January. If it fails, Stage~1 stops as a paper project and the finding is shared as a report or post. Further work on Stage~1 then receives a bounded feasibility budget of at most three weeks and continues only with a specific new hypothesis and preliminary evidence for it. Stage~2 proceeds only on its own justification (Section~\ref{sec:a1a2}).
+\item[G-A2, month 5 (February--March 2027).] Stage~2 on ground truth: H-A5 holds in at least two model families, with batching and prior corrections applied. If it fails, Stage~2 stops as a paper project and its budget returns to the reserve.
+\item[G-A3, month 7 (May 2027).] The refusal application succeeds with
+controls. If so, Stage~2 and the refusal study are submitted to NeurIPS
+2027.
+\end{description}
+\noindent Outputs: the Stage~1 paper and library if G-A1 passes; the
+Stage~2 paper; a theory note, if the theory strand goes beyond the batching factor and standard e-value constructions; and an Alignment Forum post at
+each stage.
+
+\section{Project B (gated): recoverability audits with a geometric statistic}
+\label{sec:projB}
+
+\subsection{The question}
+
+Auditors need to know whether a capability that a model does not display
+could be recovered cheaply. Elicitation can improve benign models as well
+as sandbagging ones, so improvement alone is an unreliable detector
+\cite{taylor2025}. For an arbitrary model the defensible conclusion is
+operational: \emph{capability $C$ is recoverable from weights $w_0$ under
+a stated adaptation protocol and budget}. ``Suppressed'' and ``absent''
+are used only for organisms whose training history is known. A capability
+can be cheap to acquire because it is simple, and an existing capability
+can be hard to recover with a given adapter family. Project~B asks whether
+one independently measured geometric statistic predicts recoverability
+better than excess description length and calibrated uplift.
+
+\subsection{Theory}
+
+\begin{keybox}{Excess description length, corrected (internal calculation).}
+EDL is $L^A(n)-n\,L_{\rm test}(\theta^A_n)$: the prequential code length of
+the fine-tuning labels minus $n$ times the final model's test loss
+\cite{donoway2026}. Under a Bayesian data model the prequential part splits
+exactly,
+\begin{equation}
+\E\,L^A(n)=\E\,F_n+\mathrm{AC}_A(n),\qquad
+\mathrm{AC}_A(n)=\sum_{i=1}^n\E\,\KL\bigl(q_i\,\|\,p^A_i\bigr)\ge0,
+\label{eq:edlsplit}
+\end{equation}
+with $q_i$ the Bayes predictive after $i-1$ labels. Hence $\E\,\EDL^A$ is
+the Bayes part $\E F_n-n\,\E L_{\rm test}(q_{n+1})$, which equals
+$\lambda\log n-(m-1)\log\log n+O(1)$, plus $\mathrm{AC}_A(n)$, minus $n$
+times the excess of the learner's final test loss over the Bayes
+predictive's. Details: Appendix~\ref{app:edl}.
+\end{keybox}
+
+That elicitation corresponds to a small learning coefficient of the
+unlocking adaptation, and teaching to a large one, is a hypothesis, not a
+consequence: prior terms and learner coefficients can carry the
+difference. Optimizer effects on EDL lie in the algorithmic terms by
+construction. The substantive question is whether the algorithmic excess,
+estimated against an independent Bayes estimate, predicts
+optimizer-dependent behaviour such as that reported in \cite{brown2026}.
+
+\paragraph{Local free-energy depth.} \LCalc{} Let $U_{\rm on}$ and
+$U_{\rm off}$ be the regions of adaptation space near $w_0$ in which the
+capability is and is not displayed, defined by a fixed evaluation
+threshold. Under the local tempered posterior on neutral data, the depth
+$D=F_{\rm on}-F_{\rm off}$ is the log-odds against the capable region at a
+fixed reference scale. Adding $k$ demonstrations while keeping the neutral
+data multiplies the posterior by $e^{-\beta S_k}$, where $S_k$ is the summed
+loss on the demonstrations. The log-odds of the capable region therefore
+change exactly by
+\begin{equation}
+\log\E_{\rm on}\bigl[e^{-\beta S_k}\bigr]-\log\E_{\rm off}\bigl[e^{-\beta S_k}\bigr],
+\label{eq:logodds}
+\end{equation}
+with expectations over the unmodified local posterior restricted to each
+region (Appendix~\ref{app:flip}). Along the continuous population-loss tilt $p_t\propto p_0e^{-\beta tL_C}$, the initial slope in $t$ is $\beta\,(\E_{\rm off}[L_C]-\E_{\rm on}[L_C])$, which involves the capability loss alone; actual demonstrations are handled by the exact identity. The replacement formula of version 6 agrees only
+when both regions fit the neutral data equally well. Computing
+\eqref{eq:logodds} by reweighting, or by thermodynamic integration over $k$
+when the weights degenerate, gives the flip point without extrapolating a
+derivative.
+
+\paragraph{Why depth is hard to measure.} Stable chains and reproducible
+loss estimates do not establish relative basin masses: every chain can
+remain in one region and agree with the others while missing the capable
+region. Depth estimates therefore require defined regions, overlap along
+the integration path and a test that would detect missed regions.
+Project~B validates depth where masses are known before using it anywhere
+else.
+
+\subsection{Stage B1: validation where masses are exact}
+
+Stage~B1 uses small models in which the posterior masses of the capable and
+incapable regions can be computed by quadrature or by long, heavily
+tempered reference runs. These include low-dimensional parametric models
+with two basins and small networks trained with and without a password
+lock. Stochastic-gradient estimates of $D$ are compared with the
+references, including designed cases in which the capable region is hard
+to reach.
+
+\begin{hypbox}{H-B1 (depth is measurable).}
+In small models with exact or reference masses, stochastic-gradient
+estimates of $D$ agree with the references within a stated tolerance, and
+the missed-region test flags every designed case in which chains fail to
+reach the capable region.
+\end{hypbox}
+
+\subsection{Stage B2: matched organisms}
+
+Stage~B2 uses matched organisms on open bases with one to two billion
+parameters: password-locked models \cite{greenblatt2024}, imitation-trained
+sandbaggers with distractor behaviours \cite{taylor2025}, benign models
+fine-tuned identically without the lock, and never-trained controls built
+by withholding synthetic facts. Four statistics are compared: calibrated
+uplift (improvement on the target minus improvement on a matched control
+task, benchmarked on benign models), EDL with the corrected definition,
+noise injection \cite{tice2025} and depth $D$.
+
+\begin{hypbox}{H-B2 (depth adds information).}
+In matched organisms, $D$ improves prediction of recoverability---whether the stated adaptation procedure reaches the stated performance threshold within its budget---beyond what EDL and calibrated uplift predict together, at matched compute.
+\end{hypbox}
+
+\begin{hypbox}{H-B3 (the cost of unlocking).}
+The flip point computed from \eqref{eq:logodds} with local samples of the
+unmodified model agrees within a factor of two with the number of
+demonstrations at which few-shot fine-tuning recovers the capability.
+Large disagreements identify cases in which fine-tuning does not behave
+like posterior updating.
+\end{hypbox}
+
+\paragraph{Two outcomes, kept apart.} Recoverability is the primary outcome of
+the first Project~B paper. Whether an organism was built with a targeted
+suppression or hidden-behaviour mechanism is a different target: a benign
+model can contain an easily elicited capability, and predicting its
+recovery correctly is not a false positive. Discrimination between training
+histories is a separate, secondary analysis.
+
+\paragraph{Audits with error guarantees.} For that secondary analysis, each
+statistic can be converted into an e-value against the null that the
+model's history involves no targeted suppression, by conformal calibration
+against a library of models built without it \cite{vovk2005}. The
+guarantee requires the audited model, under the null, to be exchangeable
+with the library's models, which the organism design must make plausible.
+E-values from different statistics or rounds are combined by a prespecified
+weighted average; products are used only where conditional validity for
+the full audit history has been shown (Appendix~\ref{app:evidence}).
+
+\subsection{Stretch goals}
+\label{sec:emcase}
+
+If Stage~B2 succeeds, four extensions follow.
+\begin{itemize}[leftmargin=*]
+\item \textbf{Scale and realism.} Organisms with seven to eight billion
+parameters, including backdoored ``sleeper agent'' models and a model with
+a concealed objective, both re-created on open models following
+\cite{hubinger2024} and \cite{marks2025}.
+\item \textbf{Susceptibilities.} The covariances behind the initial slope
+of \eqref{eq:logodds} are susceptibilities to added data
+(Appendix~\ref{app:lr}); they also map the components that carry a
+suppression \cite{baker2026}.
+\item \textbf{Rare outputs.} Nearby models drawn from the local posterior
+serve as proposals for importance sampling of the original model's rare
+harmful outputs, with weights computed exactly from token log-probabilities
+and each sample scored under every mixture component. H-B4: this reaches a
+given relative error with fewer samples than isotropic weight noise and is
+competitive with activation-steered proposals \cite{angell2026,wuhilton2025}.
+\item \textbf{Emergent misalignment.} Broad misbehaviour after narrow
+harmful fine-tuning \cite{betley2026} serves as a case study, using
+existing small organisms \cite{turner2025}; general misalignment is
+expected to be cheaper to recover than narrow misalignment
+\cite{soligo2026,brown2026}.
+\end{itemize}
+Patterning suggests a defensive converse: choose unlearning data that
+increases $D$, so that removed capabilities are harder to recover
+\cite{wangmurfet2026}.
+
+\subsection{Gates and outputs}
+
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[G-B1, month 6.] H-B1 holds. If it fails, depth is not used and the validation failure is shared as a report. Project~B continues only if a specific new hypothesis about recoverability passes a two-week feasibility check; otherwise its budget returns to the reserve.
+\item[G-B2, month 9.] H-B2 holds on matched organisms. If so, the recoverability paper is submitted to ICLR 2028, with the deadline expected in late September or early October 2027. If not, the paper is not pursued and the stretch goals are cancelled.
+\item[G-B3, month 10.] Stretch goals begin if G-B2 passes.
+\end{description}
+\noindent Stages~B1 and B2 need a few hundred A100-hours; the stretch goals
+up to about 2,000.
+
+\section{The dynamics note: learning coefficients predict selection, not passage}
+\label{sec:p0}
+
+This short note (P0) closes the question of the earlier versions in
+public, engages a published claim with a checkable correction, and
+states the lesson that motivates version 6. It reuses completed work;
+the budget is 0.75 person-months, and the Alignment Forum version comes first (weeks 6--8), with the arXiv version after the ICML deadline (month 4).
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Scoped impossibility.} \LCalc{} No function of the saddle
+invariants $(\lambda_s,m_s)$, or of any population-loss statistic,
+determines saddle-passage statistics once teacher, gradient covariance,
+initialization scales or metric may vary. The four controls from
+version 5 establish this (Appendix~\ref{app:p0}). The statement does not
+cover teacher-dependent finite-temperature quantities under a fixed
+optimizer, and $\lambda$ does enter activated escape rates through the
+masses of wells.
+\item \textbf{Flat sets.} \LCalc{} and \LNum{} The published passage law
+$T\propto\eps^\lambda$ for diffusion through a flat region
+\cite{hennick2026} fails even for isotropic diffusion in a reflecting
+tube. The passage time scales as $\eps^{\lambda-\chi_{\rm exit}}$, up to
+logarithms, where $\chi_{\rm exit}$ is the scaling exponent of the exit
+cross-section. Numerical checks confirm constant, logarithmic and
+$\eps^{-1/4}$ behaviour in three cases where $\eps^\lambda$ predicts
+decay (Appendix~\ref{app:p0}).
+\item \textbf{Discrete chain.} \LNum{} The continuous approximation is
+accurate for small steps. The strong-noise power law never appears in
+discrete SGD. With label noise about 0.9\% of paths cross zero and
+never exit. Exit time is not a function of $\eta/b$ alone.
+\item \textbf{The positive lesson.} $\lambda$ governs posterior masses and
+code lengths, that is, selection and evidence, not passage times. A
+basin-selection account of grokking makes the same distinction in a
+different setting \cite{cullen2026}.
+\end{enumerate}
+\noindent A courtesy copy goes to the authors of \cite{hennick2026}
+before posting.
+
+\section{Tooling}
+\label{sec:tools}
+
+The \texttt{devinterp} library is actively maintained. The first step is
+an issue, not a pull request, proposing (i) regression tests against
+exact learning coefficients (monomial germs and reduced-rank regression
+\cite{aoyagiwatanabe2005}) and (ii) a code-length utility with per-sample and block prequential estimators, the batching-factor correction, estimators of the widely applicable Bayesian information criterion \cite{watanabe2013} and the thermometer. A pull request
+follows in months 6--9 if the maintainers want it. Project~A's evaluation library is released with its preprint. A third contribution is a calibration suite for susceptibility estimates: exact posterior covariances in conjugate Gaussian models and, by quadrature, in two-dimensional singular potentials, against which stochastic-gradient estimates are checked across step sizes and chain lengths. It could become a short joint paper with Resolution. Budget: 0.5 person-months before month 12 and 0.25 afterwards.
+
+\section{Schedule and effort}
+\label{sec:schedule}
+
+The plan assumes a full-time commitment: about twelve person-months before
+month 12 and eighteen in total. At most two projects are in active
+execution at once, besides small tooling and writing tasks, and the
+reserve is released by gate outcomes rather than by drift.
+
+\begin{center}
+\begin{tabular}{@{}P{2.4cm}P{8.1cm}P{4.4cm}@{}}
+\toprule
+Period & Primary work & Public milestone \\
+\midrule
+Weeks 1--2 (Oct 2026) & Exact examples and G-A0; draft of the dynamics
+note; \texttt{devinterp} issue. & --- \\
+Weeks 3--6 (Oct--Nov) & Ground truth, manufactured alignments and strong
+baselines; decision gate G-A1. & Dynamics note on the Alignment Forum
+(weeks 6--8). \\
+Weeks 7--16 (Nov 2026--Jan 2027) & If G-A1 passes: Stage~1 paper and library. Otherwise: report, bounded feasibility budget, and the Stage~2 pilot. Stage~B1 set-up. & Stage~1 paper (ICML 2027) if G-A1 passes. \\
+Months 4--7 (Feb--May) & Stage~2 on ground truth (G-A2); refusal study
+(G-A3); Stage~B1 validation (G-B1, month 6). & Dynamics note on arXiv
+(month 4); NeurIPS 2027 submission. \\
+Months 8--12 (Jun--Oct) & Stage~B2 matched organisms (G-B2, month 9);
+deception probes; stretch goals from month 10. & ICLR 2028 submissions;
+NeurIPS decisions; posts. \\
+Months 12--18 & Revisions, stretch goals, journal versions, talks and
+applications. & Record complete by month 12. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Item (person-months) & By month 12 & Months 12--18 & Total \\
+\midrule
+Dynamics note & 0.75 & 0.25 & 1.0 \\
+Project A, Stage 1 and theory strand & 3.0 & 0.5 & 3.5 \\
+Project A, Stage 2 and applications & 3.5 & 1.0 & 4.5 \\
+Project B & 3.25 & 2.0 & 5.25 \\
+Tooling & 0.5 & 0.25 & 0.75 \\
+Outreach, collaboration and applications & 0.5 & 1.0 & 1.5 \\
+Reserve & 0.5 & 1.0 & 1.5 \\
+\midrule
+Total & 12.0 & 6.0 & 18.0 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Stop rules and the reserve.} A line of work that fails its gate stops as a paper project, and its remaining budget returns to the reserve. The reserve funds only lines that have passed their gates, or new hypotheses with preliminary evidence from a bounded feasibility budget: at most three weeks after G-A1 and two weeks after G-B1 or G-B2. Stage~2 must pass its own pilot whatever the outcome of G-A1.
+
+\paragraph{Readiness indicators.} Instead of publication probabilities,
+the plan tracks what each output depends on and how close it is.
+
+\begin{center}
+\begin{tabular}{@{}P{2.9cm}P{2.4cm}P{9.6cm}@{}}
+\toprule
+Output & Depends on & Readiness indicators \\
+\midrule
+Dynamics note & --- & Draft complete; flat-set correction checked against
+the original assumptions; courtesy copy sent. \\ \addlinespace
+Theory note & G-A0, T4 & Results beyond the batching factor and standard e-value constructions, such as learner coefficients in singular families. \\ \addlinespace
+Stage~1 paper & G-A0, G-A1 & Share of manufactured alignments rejected
+that the strongest baseline accepts; false-rejection rate for valid
+explanations; effect sizes with intervals; tested library. \\ \addlinespace
+Stage~2 paper & G-A2, G-A3 & Shared response datasets; capacity-matched
+black boxes; corrected gains; refusal study with controls. \\ \addlinespace
+Project~B paper & G-B1, G-B2 & Validation on exact masses; missed-region
+test; matched organisms; effect sizes for H-B2. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Contacts.} Month 2: Resolution, with the dynamics note, the
+Project~A plan and a proposal for joint work on susceptibilities and
+calibration. After G-A1: the authors of
+\cite{ma2026,sutter2025,meloux2026,gauderis2026}. During the theory strand:
+ARC and Gr\"unwald's group on e-values. After G-B1: the authors of the EDL
+and noise-injection work.
+
+\section{Outlook}
+\label{sec:outlook}
+
+Failed experiments are worth sharing, but not every outcome supports a
+paper: establishing that familiar baselines work on the examples tried is
+not automatically a significant negative result. The table lists what
+would be shared under each outcome and how the rest of the plan responds.
+Subjective publication probabilities are kept outside the plan and revised
+at each gate.
+
+\begin{center}
+\begin{tabular}{@{}P{3.4cm}P{6.0cm}P{5.5cm}@{}}
+\toprule
+Outcome & Shared as & Effect on the rest \\
+\midrule
+G-A1 passes & Stage~1 paper (ICML 2027 or NeurIPS 2027) and library &
+Stage~2 proceeds if its own pilot succeeds. \\ \addlinespace
+G-A1 fails & Report or post; a paper only if the failure reveals something
+unexpected about strong baselines or about the codes & Stage~1 stops;
+bounded feasibility budget; Stage~2 needs its own justification. \\
+\addlinespace
+Theory strand & A note only if it goes beyond the batching factor and
+standard e-value constructions & Otherwise the results serve as
+foundations for the papers. \\ \addlinespace
+G-A2 and G-A3 pass & Stage~2 paper with the refusal study (NeurIPS 2027) &
+Deception probes follow. \\ \addlinespace
+G-A2 fails & Report & Stage~2 stops; its budget returns to the reserve. \\
+\addlinespace
+G-B1 fails & Report of the validation failure & Project~B stops unless a
+new hypothesis passes a two-week feasibility check. \\ \addlinespace
+G-B2 passes & Recoverability paper (ICLR 2028) & Stretch goals. \\
+\addlinespace
+G-B2 fails & Report & Stretch goals are cancelled. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Under unfavourable outcomes the record by month 12 may consist of
+the dynamics note, reports and tooling, which is thin for the objective.
+That is the risk the plan accepts in exchange for ambitious targets; the
+stop rules limit the time it can cost. Under favourable outcomes the record
+contains a method paper, a language-model-scale interpretability paper
+with a safety application and a recoverability paper under review.
+
+\section{Risks and responses}
+\label{sec:risks}
+
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[R1: overlap or scoop.] Close work exists \cite{ma2026} and active
+groups work on causal-abstraction metrics and description-length
+frameworks \cite{meloux2026,gauderis2026}. Response: speed on the decision
+experiment, differentiation through adversarial validation and theory, and
+early contact.
+\item[R2: the baselines already solve the problem.] Distribution-shifted
+held-out tests or complete intervention protocols may expose every
+manufactured alignment tried. Accepted: Stage~1 then stops as a paper project under the stop rule, and the finding is shared.
+\item[R3: estimator artefacts.] Batching, learner and prior effects can
+masquerade as geometry. Response: the theory strand, exact examples and
+per-sample Bayes codes for every SLT comparison.
+\item[R4: the SLT hypotheses fail.] H-A3 or the link between elicitation
+and small learning coefficients may not hold. Accepted and reported; the
+main statistics do not depend on them.
+\item[R5: no guaranteed tests for neural controls.] Certified likelihood
+bounds exist only for tractable families. Response: guarantees are claimed
+only there; other comparisons are reported as relative fit.
+\item[R6: depth is not measurable.] Response: G-B1 on exact masses before
+any use at scale.
+\item[R7: unrealistic organisms.] Response: imitation-trained sandbaggers,
+matched benign controls, and treating success as necessary rather than
+sufficient evidence for real audits.
+\item[R8: overcommitment.] Response: at most two projects in active
+execution, and gate-driven release of the reserve.
+\item[R9: engineering at scale by one person.] Response: stage every
+experiment at one to two billion parameters, reuse open organisms and
+libraries, and seek a collaborator for Project~B's infrastructure.
+\item[R10: the ICML date moves.] The deadline is an estimate. An earlier
+date means a Stage~1 paper built on the ground-truth results alone; a
+later one adds the benchmark study.
+\item[R11: dual use.] The tools are defensive. No misaligned adapters are
+released beyond those already public.
+\end{description}
+
+\appendix
+
+\section{Technical material for the dynamics note}
+\label{app:p0}
+\renewcommand{\theequation}{A.\arabic{equation}}
+\setcounter{equation}{0}
+
+\subsection{Four controls from version 5}
+
+\LCalc{} Each row holds the model-intrinsic invariants fixed and changes
+one ingredient of the training process. The derivations are in version 5
+(Appendices A and B and Section 6.2).
+
+\begin{center}
+\begin{tabular}{@{}P{2.3cm}P{3.8cm}P{3.6cm}P{4.8cm}@{}}
+\toprule
+Control & Held fixed & Changed & Consequence for exit \\
+\midrule
+Teacher & Self-divergence and $(\lambda_s,m_s)=(1,L)$ & Realizable
+teacher, cancelling versus non-cancelling & Exit time
+$\propto u_0^{-(2L-2)}$ versus $u_0^{-(L-2)}$ \\ \addlinespace
+Gradient covariance & Population loss, Fisher, self-divergence &
+Gaussian versus Rademacher inputs & Positive versus exactly zero
+minibatch noise \\ \addlinespace
+Scale hierarchy & Self-divergence, teacher & Initialization
+$(\eps,\eps,\sqrt\eps,1)$ versus equal small layers &
+$\tfrac12\eps^{-1/2}\log(1/\eps)$ versus $\eps^{-(r-2)}$ \\ \addlinespace
+Metric & Population loss, self-divergence & Euclidean versus natural
+gradient & Polynomial delay versus bounded time; fixed damping restores
+the delay \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Passage through flat sets}
+
+\LKnown{} Hennick and De Baerdemacker argue that the time for isotropic
+diffusion to pass through a small flat region scales as $\eps^\lambda$
+divided by the capacitance of the escape set, which is treated as
+independent of $\eps$ \cite{hennick2026}.
+
+\LCalc{} Consider diffusion with coefficient $D$ in the tube
+$W_\eps=\{K<\eps\}$ inside a fixed domain, reflecting on $\{K=\eps\}$ and
+absorbed at an escape set. For thin tubes the Fick--Jacobs reduction
+\cite{zwanzig1992,reguera2001} gives a one-dimensional problem along the
+zero set, with cross-section $A(s)$ and enclosed volume
+$V(s)=\int_0^sA(u)\,\dd u$. Starting at the centre, with reflection there
+by symmetry,
+\begin{equation}
+T\approx\frac1D\int_0^{s_{\rm exit}}\frac{V(s)}{A(s)}\,\dd s .
+\label{eq:fj}
+\end{equation}
+Three germs illustrate the result, with $D=1$ for the numbers.
+\begin{enumerate}[leftmargin=*]
+\item $K=y^2$ in the unit disk ($\lambda=\tfrac12$). Here $A=2\sqrt\eps$
+and $V=2\sqrt\eps\,x$, so $T=\int_0^1x\,\dd x=1/(2D)$, independent of
+$\eps$.
+\item $K=x^2y^2$ in the unit disk ($\lambda=\tfrac12$, $m=2$). Here
+$A(x)=2\min(x,\sqrt\eps/x)$, $V(x)=\sqrt\eps+2\sqrt\eps\log(x\eps^{-1/4})$
+for $x>\eps^{1/4}$, and $T=\log(1/\eps)/(8D)+O(\sqrt\eps)$. The
+multiplicity survives as a logarithm.
+\item $K=x^4y^2$ in $[-1,1]^2$, absorbed only at $x=\pm1$ ($\lambda=\tfrac14$).
+Here $A(x)=\min(2,2\sqrt\eps/x^2)$, $V(x)=4\eps^{1/4}-2\sqrt\eps/x$ for
+$x>\eps^{1/4}$, and $T=\tfrac23\eps^{-1/4}/D-1/(2D)+O(\sqrt\eps)$: the
+time grows as $\eps\to0$.
+\end{enumerate}
+In general the dominant volume scales as $\eps^\lambda$, up to
+logarithms, while the exit cross-section scales as $\eps^{\chi_{\rm exit}}$.
+The integral in \eqref{eq:fj} is dominated near the exit, giving
+$T\propto\eps^{\lambda-\chi_{\rm exit}}$ up to logarithms. All three
+cases have $\chi_{\rm exit}=\tfrac12$. The capacitance of an escape window
+that is itself a cross-section of the tube scales with $\eps$; it is not
+constant.
+
+\LNum{} Finite-difference solutions of the reflected-diffusion
+mean-first-passage problem (\texttt{tube\_mfpt.py}) agree with
+\eqref{eq:fj}:
+
+\begin{center}\small
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+$\eps$ & (1) numerical & (2) numerical & (2) reduction & (3) numerical & (3) reduction & $\eps^\lambda$ law \\
+\midrule
+$10^{-2}$ & 0.500 & 0.620 & 0.576 & 1.835 & 1.608 & decreasing \\
+$10^{-3}$ & 0.504 & 0.883 & 0.863 & 3.434 & 3.249 & decreasing \\
+$10^{-4}$ & 0.500 & 1.150 & 1.151 & 6.253 & 6.167 & decreasing \\
+$10^{-5}$ & --- & 1.430 & 1.439 & 11.359 & 11.355 & decreasing \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The value 0.504 reflects grid alignment. In case (3) the
+fitted log--log slope is $-0.264$ overall and $-0.259$ on the last
+decade, against the predicted $-1/4$; in case (2) the slope of $T$
+against $\log(1/\eps)$ is $0.117$, against $1/8$. The calculation uses a
+reflecting-tube caricature; whether it transfers to the exact
+formulation of \cite{hennick2026} will be checked with the authors. It
+is consistent with order-one motion along zero sets \cite{larsson2026}.
+
+\subsection{The discrete balanced chain}
+
+\LNum{} The balanced update of version 5 is
+$u_{k+1}=u_k+\eta u_k^{L-1}[(s-u_k^L)A_k+C_k]$, with
+$A_k=b^{-1}\sum x_i^2$ and $C_k=b^{-1}\sum q_ix_i$. We used $L=3$,
+$s=1$, $w_0=10^{-3}$, $w_1=1/2$, Gaussian inputs and the clock $T=K\eta$
+(\texttt{discrete\_sgd\_check.py}; 4000 paths per setting).
+
+\begin{center}\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+$\eta$ (with $b=1$, $\sigma_q=0$) & 0.01 & 0.1 & 1 & 3 & 10 & 100 \\
+\midrule
+This check & 9.19 & 9.75 & 13.98 & 20.70 & 38.3 & 179.0 \\
+Standard error & 0.007 & 0.021 & 0.063 & 0.12 & 0.24 & 1.3 \\
+Direction review & 9.19 & 9.79 & 14.05 & 20.7 & 38.7 & 182 \\
+Diffusion, exact quadrature & 9.15 & 9.51 & 14.25 & --- & 186.9 & 14278 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Without label noise $A_k\ge0$, so no path ever moves backward.
+The diffusion is accurate up to $r=\eta/b\approx1$, and its strong-noise
+power law never appears in discrete SGD.
+
+With label noise ($\sigma_q=1$, $\eta=1$, $b=1$; \texttt{trapped\_check.py};
+20{,}000 paths, $10^6$ steps), 179 paths did not exit ($0.90\%\pm0.07\%$)
+and 212 crossed zero. Every non-exiting path sits near
+$u\approx-1.0\times10^{-6}\approx-1/(\eta sk)$. For $u<0$ the drift
+$\eta su^2$ pushes $u$ towards zero from below ever more slowly, and
+returning above zero would require a noise kick of order $1/(\eta|u|)$.
+The median exit time is 15 and the mean conditional on exit about 16.3;
+the unconditional mean is infinite. The review's ``mean of order
+$10^3$--$10^4$'' is inconsistent with its own censoring count: 13 of 2000
+paths unfinished at $10^7$ steps imply a restricted mean of at least
+$6.5\times10^4$. With $r=\eta/b=0.1$ fixed, $(\eta,b)=(0.1,1)$, $(1,10)$
+and $(10,100)$ give $T=9.77$, $11.61$ and $29.71$ (review: 11.8 and 29.6),
+so exit time is not a function of $r$ alone.
+
+\section{Code-length algebra}
+\label{app:codes}
+\renewcommand{\theequation}{B.\arabic{equation}}
+\setcounter{equation}{0}
+
+\subsection{Prequential and mixture codes coincide for Bayes predictors}
+
+\LKnown{} With the posterior $\pi(\cdot\mid D_{i-1})$ and predictive
+$q_i(y\mid x)=\int p(y\mid x,w)\,\pi(w\mid D_{i-1})\,\dd w$, the chain rule
+gives $q(y^n\mid x^n)=\prod_iq_i(y_i\mid x_i)$, so
+$F_n=\sum_i-\log q_i(y_i\mid x_i)$ exactly.
+
+\subsection{Asymptotics}
+
+\LKnown{} Expansion \eqref{eq:watanabe} holds for analytic models on
+compact parameter sets, with priors positive and smooth near the optimal
+set, under realizability or a relatively finite variance condition
+\cite{watanabe2009,watanabe2018}. For regular models $\lambda=d/2$ and
+$m=1$. The Bayes training loss is $L_n(w_0)+O_p(1/n)$, so the residual
+code length under the final predictive is $nL_n(w_0)+O_p(1)$.
+
+\subsection{The gain on fixed targets}
+
+\LCalc{} Apply \eqref{eq:watanabe} to the Bayes codes of a configuration
+and a control on the same ordered targets, with optima $\theta$ and
+$\theta_C$:
+\begin{equation}
+G(n)=n\bigl[L^C_n(\theta_C)-L_n(\theta)\bigr]+\Delta\lambda\log n
+-\Delta(m-1)\log\log n+O_p(1).
+\end{equation}
+Write $n[L^C_n(\theta_C)-L_n(\theta)]=n\Delta\ell+R_n$, where $R_n$ is the
+difference of centred empirical losses; in general $R_n=O_p(\sqrt n)$. With
+randomized response, each target is replaced with known probability
+$\eps_{\rm e}$ by a uniformly random label and the ordinary softmax
+likelihood is used. If a configuration can represent the resulting
+conditional law, it does so at finite logits, so the model is realizable
+and analytic. Two configurations that both fit exactly make identical
+predictions on the same noisy labels, so $\Delta\ell=0$ and $R_n=0$.
+Whether a frozen network with a given map family can attain the target
+probabilities is an empirical question, checked by calibration. The
+$O_p(1)$ terms include the log prior density near the optimal set; they do
+not vanish and differ between configurations with equal $\lambda$.
+
+\subsection{The label-only control gains nothing from relabelling-invariant priors}
+
+\LCalc{} Fix the evaluation pairs. A map family and prior induce a
+distribution $Q$ on labellings $y^n\in\mathcal Y^n$. Suppose $Q$ is
+invariant under every permutation of $\mathcal Y$ applied independently at
+each pair. These permutations act transitively on $\mathcal Y^n$, so $Q$ is
+uniform and $-\log Q(y^n)=n\log|\mathcal Y|$ for every labelling: the Bayes
+code equals the uniform code, and the gain against the label-only code,
+which has no access to the algorithm, is zero. The minimax-regret statement
+of Section~\ref{sec:primer} is the worst-case analogue
+\cite{shtarkov1987}. Practical map families are not invariant and carry
+inductive biases of their own, which is why the untrained-network control
+is needed: it measures what the learner achieves without the network's
+help. Measuring the information a representation makes usable to a
+restricted family is familiar from probing
+\cite{pimentel2020info,xu2020,voita2020}.
+
+\subsection{The batching factor}
+\label{app:batch}
+
+\LCalc{} Suppose a learner's expected excess log loss after $m$ examples is
+$\kappa/m+o(1/m)$. Code the data in blocks with boundaries
+$n_j=\lceil r^j\rceil$, using for each block the predictor trained on all
+data before it. Block $j$ then contributes
+$(n_{j+1}-n_j)\,\kappa/n_j+o(1)=\kappa(r-1)+o(1)$, and there are about
+$\ln n/\ln r$ blocks up to $n$, so
+\begin{equation}
+\text{cumulative excess}=\kappa\,\frac{r-1}{\ln r}\,\ln n+o(\ln n).
+\end{equation}
+The remainder is $O(1)$ if the learning curve's remainder is $O(m^{-1-\delta})$ for some $\delta>0$; a term of order $1/(m\log m)$, such as the multiplicity term of a singular Bayes learning curve, accumulates into $\log\log n$. Per-sample updating ($r\to1$) gives $\kappa\ln n$. For the Bayes predictive,
+$\kappa=\lambda$ \cite{watanabe2009}, so a Bayes predictor frozen within
+doubling blocks has coefficient $\lambda/\ln2$. For plug-in predictors in
+regular models, $\kappa=d/2$; for plug-in or gradient-trained predictors in
+singular models, $\kappa$ need not equal $\lambda$.
+
+\LNum{} For a Gaussian mean with known unit variance, the expected excess
+of each predictor is available in closed form: $1/(2m)$ for the sample
+mean, and an exact Kullback--Leibler expression for the Bayes predictive
+with prior $N(0,1)$ and true mean $0.3$. Summing exactly over block
+schemes and fitting against $\ln n$ at block boundaries between $2^8$ and
+$2^{22}$ gives (\texttt{batching\_check.py}):
+
+\begin{center}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Scheme & Growth factor $r$ & Fitted coefficient & $\tfrac12\,(r-1)/\ln r$ \\
+\midrule
+Plug-in, per sample & 1 & 0.5001 & 0.5000 \\
+Plug-in & 1.5 & 0.6166 & 0.6166 \\
+Plug-in, doubling & 2 & 0.7213 & 0.7213 \\
+Plug-in & 4 & 1.0820 & 1.0820 \\
+Bayes, per sample & 1 & 0.4998 & 0.5000 \\
+Bayes, doubling & 2 & 0.7208 & 0.7213 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Logarithmic slopes of block codes must therefore be divided by
+$(r-1)/\ln r$ before comparison with $\lambda$, and even then they estimate
+the learner's coefficient $\kappa$ rather than $\lambda$.
+
+\subsection{Excess description length}
+\label{app:edl}
+
+\LCalc{} EDL is defined as $\EDL^A(n)=L^A(n)-n\,L_{\rm test}(\theta^A_n)$,
+with $L_{\rm test}(\theta)=\E_{(x,y)\sim\mathcal D}[-\log p_\theta(y\mid x)]$
+\cite{donoway2026}. Let $\theta$ be drawn from the prior, inputs be
+independent, and $y_i\mid x_i,\theta\sim p(\cdot\mid x_i,\theta)$. Then, given
+the first $i-1$ labels and $x_i$, the label $y_i$ has law $q_i$, the Bayes
+predictive, and for any predictor $p^A_i$ built from the same information
+\begin{equation}
+\E\bigl[-\log p^A_i(y_i\mid x_i)\bigr]
+=\E\bigl[-\log q_i(y_i\mid x_i)\bigr]+\E\,\KL\bigl(q_i\,\|\,p^A_i\bigr).
+\end{equation}
+Summing gives \eqref{eq:edlsplit}, and therefore
+\[
+\E\,\EDL^A=\bigl[\E F_n-n\,\E L_{\rm test}(q_{n+1})\bigr]
++\mathrm{AC}_A(n)-n\bigl[\E L_{\rm test}(\theta^A_n)-\E L_{\rm test}(q_{n+1})\bigr].
+\]
+For a fixed teacher under the conditions of \eqref{eq:watanabe},
+$\E F_n=nL(w_0)+\lambda\log n-(m-1)\log\log n+O(1)$ and
+$\E L_{\rm test}(q_{n+1})=L(w_0)+\lambda/n+o(1/n)$, so the Bayes part is
+$\lambda\log n-(m-1)\log\log n+O(1)$. The algorithmic term is nonnegative
+under the Bayesian data model; the final-loss correction can have either
+sign. The expected nonnegativity of EDL itself requires conditions on the
+learner \cite{donoway2026}.
+
+\subsection{How demonstrations move the local posterior}
+\label{app:flip}
+
+\LCalc{} Let $p_0$ be the local tempered posterior on neutral data. Adding
+demonstrations $z_1,\dots,z_k$ with summed loss
+$S_k(w)=\sum_{j\le k}\ell_C(w;z_j)$ gives $p_k\propto p_0\,e^{-\beta S_k}$.
+Hence, exactly,
+\begin{equation}
+\frac{P_k(U_{\rm on})}{P_k(U_{\rm off})}
+=\frac{P_0(U_{\rm on})\,\E_{\rm on}[e^{-\beta S_k}]}
+{P_0(U_{\rm off})\,\E_{\rm off}[e^{-\beta S_k}]},
+\end{equation}
+with expectations under $p_0$ restricted to each region. This is
+\eqref{eq:logodds}, a free-energy perturbation identity. An integer number of demonstrations does not define a derivative. Along the continuous population-loss tilt $p_t\propto p_0\,e^{-\beta tL_C}$, with $L_C$ the expected loss per demonstration, the log-odds have derivative $\beta\,(\E_{\rm off}[L_C]-\E_{\rm on}[L_C])$ at $t=0$; the finite identity above is what applies to actual demonstrations. Replacing neutral data by capability data at fixed
+total size instead changes the log-odds at rate
+$n\beta\,(\E_{\rm off}[\Delta L]-\E_{\rm on}[\Delta L])$ per unit mixture
+weight, with $\Delta L=L_C-L_{\rm neutral}$. The two agree only if
+$\E_{\rm on}[L_{\rm neutral}]=\E_{\rm off}[L_{\rm neutral}]$. Reweighting
+estimates of \eqref{eq:logodds} degrade when the weights $e^{-\beta S_k}$
+concentrate on few samples; thermodynamic integration over a sequence of
+intermediate $k$ then replaces the single step.
+
+\subsection{E-values from codes}
+\label{app:evidence}
+
+\LKnown{} and \LCalc{} (i) Let $q_H$ and $q_C$ be mixture codes. Since
+$\sum_{y^n}q_H(y^n)=1$, we have $\E_{q_C}[q_H/q_C]=1$: the Bayes factor is an
+e-value against the simple null $q_C$. Evaluated sequentially it is a
+nonnegative martingale under that null, so by Ville's inequality the
+probability that it ever exceeds $1/\alpha$ is at most $\alpha$.
+(ii) For a composite null $\{p_{C,\theta}\}$, universal inference uses
+$E=q^{\rm preq}(y^n)/\sup_\theta p_{C,\theta}(y^n)$, which satisfies
+$\E_{p_{C,\theta}}[E]\le1$ for every $\theta$ \cite{wasserman2020}. The
+supremum must be computed or bounded from above. Replacing it by an
+optimizer's best value, which is a lower bound, inflates $E$ and voids the
+guarantee. For convex control families, such as logistic or Gaussian
+readouts on fixed features, the dual objective certifies an upper bound.
+The logarithm of $E$ equals the gain minus the regret of the control's
+code relative to its maximum-likelihood fit. (iii) If the control family
+contains the law of the targets, every valid e-value against it has
+expectation at most one under that law, so none grows except with small
+probability. (iv) Products across rounds require $\E[E_t\mid\mathcal F_{t-1}]\le1$ under the null \cite{grunwald2024safe}. Sequential likelihood ratios satisfy this by construction. Repeated audits of the same model need not, even with fresh data and fresh reference models: a benign model with idiosyncratic features can score high in every round, so marginal calibration can hold in each round while conditional calibration fails. Without a proof of conditional validity, evidence is combined by a prespecified weighted average of e-values, which is always valid, or by a separately validated sequential procedure.
+
+\subsection{Linear response of the local posterior}
+\label{app:lr}
+
+\LCalc{} Susceptibilities as defined in \cite{baker2026} describe a shift of
+the data distribution at fixed size. With $L_h=(1-h)L_q+hL_{q'}$,
+differentiating $\E_h[\phi]=Z_h^{-1}\int\phi\,e^{-n\beta L_h}\varphi$ gives
+$\dd\E_h[\phi]/\dd h=-n\beta\,\mathrm{Cov}_h(\phi,L_{q'}-L_q)$, which is
+\eqref{eq:suscept}. Tilting by the capability population loss at fixed neutral size, $p_t\propto p_0e^{-\beta tL_C}$, instead gives $\dd\E_t[\phi]/\dd t=-\beta\,\mathrm{Cov}_t(\phi,L_C)$.
+The two differ by the covariance with the neutral loss. The initial slope
+of \eqref{eq:logodds} is the second form applied to the indicator of the
+capable region; both forms can be estimated from the same local samples.
+
+\section{Calibration tools carried over}
+\label{app:calib}
+\renewcommand{\theequation}{C.\arabic{equation}}
+\setcounter{equation}{0}
+
+\subsection{A loss-fluctuation thermometer}
+
+\LCalc{} Under a Gibbs law proportional to $e^{-K/T}$ near a minimum of
+multiplicity one, the excess loss is asymptotically Gamma-distributed
+with shape $\lambda$ and scale $T$. Hence $\hat T=\Var/\text{mean}$ and
+$\hat\lambda=\text{mean}^2/\Var$.
+
+\LNum{} Exact two-dimensional quadrature (\texttt{thermometer\_check.py})
+recovers $T$ and $\lambda$ to machine precision for $x^2+y^4$
+($\lambda=3/4$) and $x^2+y^2$ ($\lambda=1$) at $T=10^{-2},10^{-3},10^{-4}$.
+For $x^2y^2$ ($\lambda=1/2$, $m=2$) it gives $\hat T/T=0.93,0.97,0.98$ and
+$\hat\lambda=0.37,0.40,0.42$: the logarithmic bias expected from the
+multiplicity.
+
+\paragraph{Caveat.} \LCalc{} For SGD whose gradient noise is shaped like
+the curvature, the stationary covariance near a minimum solves
+$H\Sigma+\Sigma H=(\eta/B)H$ \cite{mandt2017}, so $\Sigma=(\eta/2B)I$.
+That law is not Gibbs, and the thermometer then returns half the
+participation ratio $(\operatorname{tr}H)^2/(2\operatorname{tr}H^2)$ instead
+of $\lambda$. The plan therefore applies the thermometer only to samplers
+whose target is Gibbs by construction, as a check on step-size bias.
+
+\subsection{Identifiability of logarithmic terms}
+
+\LNum{} After removing a constant, the regressors $(\log n)/n$ and $1/n$
+have correlation $0.999$ over one decade of $n$: the variance inflation
+factor is 568 and the standard error of the $\log n$ coefficient is
+inflated 23.8-fold. Over two and three decades the factors are 348
+(18.7-fold) and 401 (20.0-fold). For $T\log(1/T)$ against $T$ they are
+568 (23.8-fold), 153 (12.4-fold) and 44 (6.6-fold)
+(\texttt{identifiability.py}). Consequences: the $(\log n)/n$ signature
+proposed for the emergent-misalignment boundary cannot be separated from
+an $O(1)$ free-energy offset; multiplicity terms in code-length curves are
+not claimed; and Project~B estimates flip points and occupancies rather
+than fitting logarithmic coefficients.
+
+\section{Topological and metric certificates for alignment maps}
+\label{app:topo}
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\setcounter{equation}{0}
+\providecommand{\Lip}{\operatorname{Lip}}
+\providecommand{\Dist}{\operatorname{Dist}}
+\providecommand{\Dgm}{\operatorname{Dgm}}
+\providecommand{\VR}{\mathrm{VR}}
+\providecommand{\sep}{\operatorname{sep}}
+
+This appendix asks whether persistent homology can test if an alignment map
+supplies the structure that an interchange-intervention analysis reports.
+\LAssess{} A search on 12 October 2026 found no work that applies persistent
+homology to causal-abstraction alignment maps; the results below are derived
+here. Neighbouring work compares representations through their multiscale
+topology \cite{barannikov2022}, shows that trained networks simplify the
+topology of class manifolds layer by layer \cite{naitzat2020}, quantifies how
+the colour classes of a point cloud mingle \cite{cultrera2025chromatic}, and
+bounds the persistent cost of Lipschitz maps \cite{gozzi2025}. A 2026 study of
+activation-space topology during alignment fine-tuning \cite{phalign2026} uses
+``alignment'' in the safety sense and is unrelated.
+
+\paragraph{Summary.} Topology alone has no power: every alignment family in
+use is a homeomorphism, and on finite data a manufactured alignment can be
+realized by a diffeomorphism isotopic to the identity
+(Appendix~\ref{app:topo-blind}). Metric persistence does constrain the map.
+Interchange interventions impose a \emph{stretch budget}: the map's distortion
+times the sensitivity of the downstream computation must exceed the output
+margin divided by the network's own separation of the values of $V$, which is
+the first bar of a chromatic persistence diagram
+(Appendix~\ref{app:topo-stretch}). Persistence diagrams of the aligned cloud
+bound distortion only weakly (Appendix~\ref{app:topo-interleave}). Topology
+beyond connected components enters in two narrower places: whether
+counterfactual states stay on the network's natural manifold
+(Appendix~\ref{app:topo-real}), and variables whose values carry topology of
+their own (Appendix~\ref{app:topo-struct}).
+Appendix~\ref{app:topo-codes} relates the stretch budget to the
+prior-dependent terms of Stage~1 code lengths, and
+Appendix~\ref{app:topo-protocol} turns the results into diagnostics, two
+hypotheses and a proof target.
+
+\subsection{Setting}
+\label{app:topo-setup}
+
+Fix a locus $\ell$. Write $h(x)\in\mathbb R^d$ for the state on input $x$,
+$H=\{h(x_i)\}_{i\le n}$ for the finite cloud of states, and
+$g:\mathbb R^d\to\mathbb R^K$ for the network's fixed computation from the
+locus to the logits. An alignment map $\phi$ is invertible, with
+$\phi(h)=(z_V,z_\perp)$ and $z_V\in\mathbb R^{d_V}$; the rotations of
+distributed alignment search and the reversible residual networks of
+\cite{sutter2025} are both of this kind. The intervened state for base $b$ and
+source $s$ is
+\begin{equation}
+h'(b,s)=\phi^{-1}\bigl(z_V(s),\,z_\perp(b)\bigr).
+\label{eq:topo-interv}
+\end{equation}
+Norms are Euclidean. The Lipschitz constant of a map $f$ on a set $S$ and the
+distortion of the alignment map are
+\[
+\Lip_S(f)=\sup_{x\neq y\in S}\frac{\|f(x)-f(y)\|}{\|x-y\|},\qquad
+\Dist(\phi)=\Lip(\phi)\Lip(\phi^{-1}),
+\]
+and the sample distortion is
+$\Dist_H(\phi)=\Lip_H(\phi)\Lip_{\phi(H)}(\phi^{-1})$. $\VR_t(S)$ is the
+Vietoris--Rips complex of simplices of diameter at most $t$, and
+$\Dgm_j(S)$ its persistence diagram in degree $j$. Colouring each state by
+$V_A(x)$ gives classes $H_v$; the inclusion
+$\bigsqcup_v\VR_t(H_v)\hookrightarrow\VR_t(H)$ defines kernel, image and
+cokernel persistence modules, the objects of chromatic persistence
+\cite{cultrera2025chromatic}.
+
+\paragraph{Margins.} For a base $b$ and sources $s,s'$ whose counterfactual
+labels $y\neq y'$ differ, call both interventions correct with margin $\mu$ if
+in each the target logit exceeds every other logit by at least $\mu$. The
+logit difference $\delta=g(h'(b,s))-g(h'(b,s'))$ then satisfies
+$\delta_y-\delta_{y'}\ge2\mu$, hence $\|\delta\|\ge\gamma:=\sqrt2\,\mu$. A
+prediction that puts probability at least $1-\eta$ on the target has
+$\mu\ge\log\bigl((1-\eta)/\eta\bigr)$. A prediction that reproduces the
+randomized-response target law of Section~\ref{sec:stage1} exactly, with $K$
+labels and noise rate $\eps_{\rm e}$, has
+$\mu=\log\bigl(1+K(1-\eps_{\rm e})/\eps_{\rm e}\bigr)$.
+
+\subsection{Topology alone cannot separate genuine from manufactured alignments}
+\label{app:topo-blind}
+
+\LCalc{} (i) A homeomorphism preserves every homotopy invariant. If $M$ is the
+support of the states, $\phi(M)$ and $M$ have the same Betti numbers however
+$\phi$ was found. Topology changes only in maps that are not homeomorphisms,
+such as the network's own ReLU layers \cite{naitzat2020}.
+
+(ii) \emph{Finite realizability.} Let $d\ge2$ and $1\le d_V<d$. Suppose that
+for every label $y$ the set
+$\Omega_y=\{h:\ g(h)_y>\max_{j\neq y}g(h)_j+\mu\}$ is nonempty, a margin
+version of the output-surjectivity assumed by \cite{sutter2025}; it is open
+because $g$ is continuous. Suppose the states of distinct inputs are distinct
+(input-injectivity). Then for any algorithm $A$ and any finite set
+$\mathcal P$ of pairs $(b,s)$ with $s\neq b$, there is a compactly supported
+$C^\infty$ diffeomorphism of $\mathbb R^d$, isotopic to the identity, whose
+interchange interventions are correct with margin $\mu$ on every pair in
+$\mathcal P$.
+
+\emph{Proof.} Choose distinct $u_x\in\mathbb R^{d_V}$ and distinct
+$w_x\in\mathbb R^{d-d_V}$ for the inputs. The data codes $(u_x,w_x)$ and the
+recombined codes $(u_s,w_b)$, $(b,s)\in\mathcal P$, are pairwise distinct. For
+each pair pick $q_{b,s}\in\Omega_{A(b;V\leftarrow V_A(s))}$, distinct from one
+another and from the states, which is possible because these sets are open
+and nonempty. The prescription $h(x)\mapsto(u_x,w_x)$,
+$q_{b,s}\mapsto(u_s,w_b)$ is a bijection between finite sets of distinct
+points. For $d\ge2$ the space of configurations of finitely many distinct
+labelled points is connected, so by the isotopy extension theorem
+\cite{hirsch1976} the bijection extends to a diffeomorphism of the required
+kind, and $h'(b,s)=q_{b,s}$. $\square$
+
+Coupling-based invertible networks approximate such diffeomorphisms
+\cite{teshima2020}; an approximation error at $q_{b,s}$ smaller than its
+distance to the boundary of $\Omega_y$ leaves the intervention correct.
+
+\paragraph{Consequences.} The non-linear representation dilemma survives
+restriction to maps that deform smoothly to the identity. Because the codes
+are arbitrary, $\phi(H)$ can be any configuration of $n$ distinct points, and
+$\Dgm_j(\phi(H))$ any diagram that $n$ points realize. A test that asks only
+whether a map preserves topological features, or that reads the topology of
+the aligned cloud alone, has no power. Evidence can come only from scales.
+
+\subsection{The stretch budget}
+\label{app:topo-stretch}
+
+\begin{keybox}{Stretch budget (internal calculation).}
+Let $b,s,s'$ be as in Appendix~\ref{app:topo-setup}, with both interventions
+correct with margin $\mu$, and let
+$\Lambda_{b,s,s'}=\sup_{\vartheta\in[0,1]}\bigl\|Dg\bigl((1-\vartheta)h'(b,s)+\vartheta h'(b,s')\bigr)\bigr\|$
+be the sensitivity of $g$ along the segment between the two intervened
+states. Then
+\begin{equation}
+\begin{aligned}
+\gamma&\le\Lambda_{b,s,s'}\,\|h'(b,s)-h'(b,s')\|
+\le\Lambda_{b,s,s'}\Lip(\phi^{-1})\,\|z_V(s)-z_V(s')\|\\
+&\le\Lambda_{b,s,s'}\Dist(\phi)\,\|h(s)-h(s')\| .
+\end{aligned}
+\label{eq:topo-chain}
+\end{equation}
+Write
+\[
+\tau_{\rm f}=\frac{\|z_V(s)-z_V(s')\|}{\|h(s)-h(s')\|},\qquad
+\tau_{\rm i}=\frac{\|h'(b,s)-h'(b,s')\|}{\|z_V(s)-z_V(s')\|}
+\]
+for the forward and inverse stretch, and $\Lambda_{\rm nat}$ for a reference
+sensitivity of $g$ on the natural states, such as the median of
+$\|Dg(h(x))\|$. The chain is then a budget,
+\begin{equation}
+\underbrace{\log\frac{\gamma}{\Lambda_{\rm nat}\,\|h(s)-h(s')\|}}_{\text{set by network and targets}}
+\ \le\ \log\tau_{\rm f}+\log\tau_{\rm i}+\log\frac{\Lambda_{b,s,s'}}{\Lambda_{\rm nat}} .
+\label{eq:topo-budget}
+\end{equation}
+Minimizing over pairs gives
+\begin{equation}
+\Dist(\phi)\,\Lambda\ \ge\ \frac{\gamma}{\sep_V},\qquad
+\sep_V=\min\bigl\{\|h(s)-h(s')\|:\ V_A(s)\neq V_A(s')\bigr\},
+\label{eq:topo-sep}
+\end{equation}
+where $\Lambda$ is the largest segment sensitivity and the minimum runs over
+pairs whose counterfactual labels differ on some base and whose interventions
+are correct.
+\end{keybox}
+
+\noindent\emph{Proof.} The first inequality is the mean value inequality
+together with $\|\delta\|\ge\gamma$. The second applies $\phi^{-1}$ to two
+codes that differ only in $z_V$. The third uses
+$\|z_V(s)-z_V(s')\|\le\|\phi(h(s))-\phi(h(s'))\|$. The budget is the chain
+rewritten with
+$\|h'(b,s)-h'(b,s')\|=\tau_{\rm i}\tau_{\rm f}\|h(s)-h(s')\|$. $\square$
+
+\paragraph{The separation is a persistence quantity.} \LCalc{} In degree zero,
+the kernel of $\bigsqcup_v\VR_t(H_v)\hookrightarrow\VR_t(H)$ has dimension
+$\sum_v\beta_0(\VR_t(H_v))-\beta_0(\VR_t(H))$, because every component of
+$\VR_t(H)$ contains a monochromatic component. For $t<\sep_V$ every path in
+$\VR_t(H)$ is monochromatic, so the kernel vanishes; at $t=\sep_V$ the closest
+bichromatic edge joins two classes. When all pairs of distinct values
+qualify, $\sep_V$ is therefore the first birth in the degree-zero kernel
+diagram, and the rest of that barcode records the scales at which the classes
+mingle. \LNum{} The identity holds exactly in 20 random three-colour clouds
+(Appendix~\ref{app:topo-checks}).
+
+\paragraph{Reading the budget.} Define the separation ratio
+$\rho_V=\Lambda_{\rm nat}\sep_V/\gamma$. If $\rho_V\ge1$, the network already
+separates $V$ at the scale its downstream computation reads, and a rotation
+satisfies \eqref{eq:topo-sep}. If $\rho_V<1$, any alignment that succeeds must
+supply $\log_2(1/\rho_V)$ bits of stretch: from the forward map, from the
+inverse map, or by sending intervened states to regions where $g$ is more
+sensitive than on the natural states. All three terms of
+\eqref{eq:topo-budget} can be measured pair by pair. An alignment can lower
+its budget only by giving up the closest bichromatic pairs, whose
+interventions then count as failures; when interchange-intervention accuracy
+is below one, $\sep_V$ is computed over the sources whose interventions
+succeed.
+
+\paragraph{Geometry that is blind to $V$.} \LCalc{} Suppose the states are $n$
+independent draws from a density $f$ on a $k$-dimensional region and the
+labels are independent of position, with class probabilities $\pi_v$. For
+small $r$ the number of bichromatic pairs within distance $r$ is then
+approximately Poisson \cite{jammalamadaka1986} with mean
+$\binom n2\bigl(1-\sum_v\pi_v^2\bigr)\,\omega_kr^k\!\int\!f^2$, where
+$\omega_k$ is the volume of the unit ball. The median of $\sep_V$ is therefore
+of order $n^{-2/k}$, and \eqref{eq:topo-sep} requires
+\begin{equation}
+\Dist(\phi)\,\Lambda\ \gtrsim\ \gamma\,n^{2/k},
+\label{eq:topo-blind}
+\end{equation}
+whereas a network that computes $V$ with margin $\mu_0$ keeps
+$\sep_V\ge\mu_0$ for every $n$. \LNum{} On the flat torus with uniform
+density, fitted slopes of $\log\sep_V$ against $\log n$ for
+$n=2^8,\dots,2^{15}$ lie within $0.012$ of $-2/k$ for $k=2,3,4$, and the
+median of $\sep_V$ lies within 10\% of the Poisson prediction
+(Appendix~\ref{app:topo-checks}).
+
+\paragraph{Discrete inputs.} With finitely many token inputs, $\sep_V$ stops
+shrinking at the distance between inputs that differ only in $V$, and the
+budget depends on how the network treats $V$. \LHyp{} For computed
+variables---the equality bits of hierarchical equality, or any variable at a
+locus before it is computed---random features interleave the classes and
+$\rho_V\ll1$. For copied variables such as the indirect-object name, random
+networks preserve token identity, $\rho_V$ may be close to one, and
+\eqref{eq:topo-sep} does not bite. This is consistent with the perfect
+alignments that \cite{sutter2025} obtained on that task in randomly
+initialized models.
+
+\subsection{Persistence of the aligned cloud bounds distortion only weakly}
+\label{app:topo-interleave}
+
+\LCalc{} Let $L=\Lip_H(\phi)$ and $L'=\Lip_{\phi(H)}(\phi^{-1})$. The vertex
+maps give simplicial maps $\VR_t(H)\to\VR_{Lt}(\phi(H))\to\VR_{LL't}(H)$ whose
+composite is the inclusion, and likewise in the other order. Rescaling
+$\phi(H)$ by $\sqrt{L'/L}$ turns this into a multiplicative interleaving with
+factor $\sqrt{\Dist_H(\phi)}$, which on a logarithmic scale is an additive
+interleaving with shift $\tfrac12\log\Dist_H(\phi)$. By the isometry theorem
+\cite{chazal2016}, for every degree $j$,
+\begin{equation}
+d_B\Bigl(\log\Dgm_j(H),\ \log\Dgm_j\bigl(\phi(H)\bigr)+\tfrac12\log(L'/L)\Bigr)
+\ \le\ \tfrac12\log\Dist_H(\phi),
+\label{eq:topo-interleave}
+\end{equation}
+where bars in degree zero, all born at zero, are compared by their deaths.
+Since $\phi$ preserves the colouring, the same bound holds for the kernel
+modules of Appendix~\ref{app:topo-stretch}. \LNum{} The bound held in 60
+trials with four clouds and coupling, linear and radial maps, with
+$\Dist_H(\phi)$ from 1.04 to 235. It was attained up to rounding in degree
+zero; the median ratio of the two sides was 0.72 in degree zero and 0.59 in
+degree one (Appendix~\ref{app:topo-checks}).
+
+The bound runs one way only. A large diagram distance proves a large
+distortion, but $\Dist_H(\phi)$ itself costs $O(n^2)$ distance evaluations and
+is never smaller than the bound implies. On the map side, persistence adds
+robustness to single extreme pairs and nothing more. The quantity to report
+is the sample distortion, together with the segment sensitivities of
+\eqref{eq:topo-budget}.
+
+\subsection{Realizability of counterfactual states}
+\label{app:topo-real}
+
+Causal abstraction constrains outputs only. The stronger hypothesis that the
+representation factorizes through the algorithm's variables also constrains
+where intervened states lie, and here topology beyond connected components
+becomes informative.
+
+\begin{keybox}{Realizability bound (internal calculation).}
+Suppose there are a map $\psi$, codes $c$ on the values of $V$ and $c'$ on the
+remaining variables $W$, with $\phi(\psi(v,w))=(c(v),c'(w))$ and
+$\|h(x)-\psi(V_A(x),W(x))\|\le\eps$ for all inputs. Suppose the input set
+contains, for each pair $(b,s)$, a recombined input $x^*$ with
+$V_A(x^*)=V_A(s)$ and $W(x^*)=W(b)$. Then
+\begin{equation}
+\|h'(b,s)-h(x^*)\|\ \le\ \bigl(\sqrt2\,\Dist(\phi)+1\bigr)\,\eps .
+\label{eq:topo-real}
+\end{equation}
+The intervened cloud $I$ therefore lies within
+$(\sqrt2\,\Dist(\phi)+1)\eps$ of $H$ in Hausdorff distance, and by the
+stability theorem for Rips complexes \cite{chazal2014}
+\begin{equation}
+d_B\bigl(\Dgm_j(H),\Dgm_j(H\cup I)\bigr)\ \le\ 2\bigl(\sqrt2\,\Dist(\phi)+1\bigr)\,\eps
+\qquad\text{for all }j .
+\label{eq:topo-real-dgm}
+\end{equation}
+\end{keybox}
+
+\noindent\emph{Proof.} Both $\|z_V(s)-c(V_A(s))\|$ and
+$\|z_\perp(b)-c'(W(b))\|$ are at most $\Lip(\phi)\eps$, so the code
+$(z_V(s),z_\perp(b))$ lies within $\sqrt2\Lip(\phi)\eps$ of
+$(c(V_A(s)),c'(W(b)))=\phi(\psi(V_A(s),W(b)))$. Applying $\phi^{-1}$
+multiplies this by at most $\Lip(\phi^{-1})$, and $\psi(V_A(s),W(b))$ lies
+within $\eps$ of $h(x^*)$. The diagram bound follows because the
+Gromov--Hausdorff distance between $H$ and $H\cup I$ is at most their
+Hausdorff distance. $\square$
+
+\LNum{} In 60 trials with a smooth bi-Lipschitz factorization, seven cyclic
+values and $\eps$ from 0.01 to 0.2, the largest observed error was 0.59 of the
+bound in \eqref{eq:topo-real}, and \eqref{eq:topo-real-dgm} held in degrees
+zero and one (Appendix~\ref{app:topo-checks}).
+
+For manufactured alignments nothing ties $I$ to $H$: in the construction of
+Appendix~\ref{app:topo-blind} the intervened states $q_{b,s}$ sit anywhere in
+the label regions $\Omega_y$. Three statistics follow.
+\begin{enumerate}[leftmargin=*]
+\item The representation-level counterfactual error $\|h'(b,s)-h(x^*)\|$
+where recombined inputs exist, normalized by the nearest-neighbour spacing of
+$H$.
+\item The one-sided Hausdorff distance from $I$ to $H$ where they do not.
+\item The persistence of the inclusion $H\hookrightarrow H\cup I$, a
+1-Lipschitz map of the kind studied in \cite{gozzi2025}. Its cokernel bars in
+degree zero are components made of intervened states only; its kernel bars in
+degree one are loops of the natural manifold that intervened states fill in.
+\end{enumerate}
+The last is the genuinely topological signal. Interventions that cut across a
+curved representation instead of following it, as linear steering does
+\cite{bhalla2026}, produce it. A failure indicts factorization, which is
+stronger than causal abstraction: subspace patching can leave the manifold
+even when the network computes $V$ \cite{makelov2024}.
+
+\subsection{Variables whose values carry topology}
+\label{app:topo-struct}
+
+Some variables take values in a space with its own geometry, such as the
+circular day-of-week and month features of \cite{engels2025} or residues in
+modular arithmetic. A stronger, geometric abstraction can then be tested: the
+network's class space should reproduce the value space up to bounded
+distortion.
+
+\LCalc{} With the recombined inputs of Appendix~\ref{app:topo-real}, define
+the class dissimilarity $d^V(v,v')$ as the median over $w$ of
+$\|h(x_{v,w})-h(x_{v',w})\|$, the distances between inputs that differ only
+in $V$. Under $\phi$ each such distance is multiplied by a factor in
+$[1/\Lip(\phi^{-1}),\Lip(\phi)]$, and so is any order statistic of them. The
+argument of \eqref{eq:topo-interleave} needs only symmetry, so it applies to
+Rips filtrations of these dissimilarities. Two consequences follow.
+\begin{enumerate}[leftmargin=*]
+\item \emph{Survival.} If $a\,d_{\mathcal V}\le d^V\le a\,\Dist_V\,d_{\mathcal V}$
+for some $a>0$, where $d_{\mathcal V}$ is the metric of the value space, then
+a degree-one bar of log-length $\xi>\log\Dist_V$ in the value space appears
+in the network's class space with log-length at least $\xi-\log\Dist_V$. For $p$
+evenly spaced values on a circle the bar has death-to-birth ratio
+$\sin(\pi\lceil p/3\rceil/p)/\sin(\pi/p)$ \cite{adamaszek2017}: 2.25 for
+$p=7$, 3.35 for $p=12$ and 6.63 for $p=24$. Short cycles therefore survive
+only small distortions. \LNum{} Rips computations reproduce this ratio for
+$p=4,\dots,24$ (Appendix~\ref{app:topo-checks}).
+\item \emph{Detection.} If the network's class space has no degree-one bar of
+log-length above $\eta$, while the class space computed in full
+$\phi$-coordinates has one of log-length $\xi$, then
+$\log\Dist(\phi)\ge\xi-\eta$.
+\end{enumerate}
+Two cautions apply. The projection to $z_V$ is 1-Lipschitz but can create
+loops, as a helix projects to a circle; class spaces are therefore computed in
+$h$ and in full $\phi$-coordinates, and a loop that appears only after
+projection is a warning sign. And the persistence of a class space does not
+depend on which value is which. A test of whether the network's class space
+matches the value space must use the correspondence, for example the
+distortion of $v\mapsto v$ between $d^V$ and $d_{\mathcal V}$ or the
+cross-barcode of \cite{barannikov2022}; permuting the correspondence then
+gives an exact null distribution.
+
+\subsection{Relation to the code lengths of Stage 1}
+\label{app:topo-codes}
+
+In the Occam regime of Section~\ref{sec:stage1}, configurations that reproduce
+the same target law differ only through logarithmic and prior-dependent
+terms. The stretch budget says where a manufactured configuration pays: in
+the prior mass of maps with high distortion. Below, $\Pi$ is the prior on the
+parameters of the alignment map.
+
+\begin{keybox}{Prior mass of high distortion (internal calculation).}
+Let $\phi$ be an additive-coupling network \cite{dinh2015,gomez2017} with $B$
+blocks
+\[
+x\ \mapsto\ O_b\bigl(x_1,\ x_2+\Theta_{b2}\,\mathrm{ReLU}(\Theta_{b1}x_1+\nu_b)\bigr),
+\qquad \Theta_{bi}\in\mathbb R^{d_{bi}\times d'_{bi}},
+\]
+with fixed permutation matrices $O_b$ and independent $N(0,\sigma^2)$ priors
+on the entries of the matrices $\Theta_{bi}$. Each block and
+its inverse are $(1+\|\Theta_{b1}\|\|\Theta_{b2}\|)$-Lipschitz, so
+\[
+\Dist(\phi)\ \le\ \prod_b\bigl(1+\|\Theta_{b1}\|\|\Theta_{b2}\|\bigr)^2 .
+\]
+Let
+$s_{\max}=\max_{b,i}\sigma\bigl(\sqrt{d_{bi}}+\sqrt{d'_{bi}}\bigr)$ and
+$u=(\Dist^*)^{1/(2B)}-1$. If $u\ge4s_{\max}^2$, then
+\begin{equation}
+-\log\Pi\bigl(\Dist(\phi)\ge \Dist^*\bigr)\ \ge\ \frac{u}{8\sigma^2}-\log(2B).
+\label{eq:topo-prior}
+\end{equation}
+\end{keybox}
+
+\noindent\emph{Proof.} If $\Dist(\phi)\ge \Dist^*$, some block has
+$\|\Theta_{b1}\|\|\Theta_{b2}\|\ge u$, so one of its two matrices has norm at
+least $\sqrt u\ge2\sigma(\sqrt{d_{bi}}+\sqrt{d'_{bi}})$. Gaussian
+concentration of the operator norm,
+$\Pr\bigl(\|\Theta\|\ge\sigma(\sqrt{d}+\sqrt{d'})+a\bigr)\le e^{-a^2/(2\sigma^2)}$
+\cite{vershynin2018}, with $a\ge\sqrt u/2$, and a union bound over the $2B$
+matrices give the claim. $\square$
+
+\paragraph{Code lengths.} \LCalc{} (sketch). Let $\mathcal A$ be the set of
+maps whose interventions are correct with margin $\mu$ on all $n$ pairs. If
+$g$ is globally $\Lambda_g$-Lipschitz, \eqref{eq:topo-sep} gives
+$\mathcal A\subseteq\{\Dist(\phi)\ge \Dist^*\}$ with $\Dist^*=\gamma/(\Lambda_g\sep_V)$.
+Assume that maps outside $\mathcal A$ pay at least $\Delta_n$ nats more than
+the best fit $nL^*$. Then
+\[
+F_n\ \ge\ nL^*-\log\bigl[\Pi(\mathcal A)+e^{-\Delta_n}\bigr],
+\]
+so when $\Delta_n\ge-\log\Pi(\mathcal A)$ the code length exceeds the best
+fit by at least $-\log\Pi(\Dist(\phi)\ge \Dist^*)-\log2$, which
+\eqref{eq:topo-prior} bounds from below. Three readings follow.
+\begin{enumerate}[leftmargin=*]
+\item The prior-dependent $O_p(1)$ terms of \eqref{eq:gain} are where the
+stretch is paid, at least about $(\Dist^*)^{1/(2B)}/(8\sigma^2)$ nats.
+\item Depth makes distortion cheap: each block takes a root of $\Dist^*$. This is
+a quantitative reading of the observation that more complex maps align even
+untrained networks \cite{sutter2025}. For deep maps the prior term will rarely
+decide a comparison, which is why the diagnostics below report distortion
+directly.
+\item Under geometry blind to $V$ with continuous inputs,
+\eqref{eq:topo-blind} gives $\Dist^*\propto n^{2/k}$ and a term growing like
+$n^{1/(kB)}$. In the population limit no map attains the margin, and the
+configuration leaves the Occam regime for the falsification regime.
+\end{enumerate}
+Whether distortion is linked to the learning coefficient of the map family
+remains open.
+
+\subsection{Diagnostics, hypotheses and proof target}
+\label{app:topo-protocol}
+
+\LTest{} Three diagnostics accompany every alignment in the decision
+experiment. Together they cost far less than training the alignments.
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[D1, network side.] The $V$-coloured kernel barcode in degree zero at each
+locus, computed from a minimum spanning tree with union--find; $\sep_V$, its
+quantiles and $\rho_V$; and a null distribution from shuffling $V$-labels
+across inputs, which is exact under exchangeability and gives a p-value or,
+through a calibrator, an e-value. Rejecting this null shows that $V$ is
+represented metrically, not that an abstraction is valid, so the statistic is
+compared with the untrained-network control on the same inputs.
+\item[D2, map side.] The three terms of \eqref{eq:topo-budget} for every pair
+used in evaluation: forward and inverse stretch exactly, and segment
+sensitivity by power iteration on Jacobian--vector products at several points
+per segment. Sampling underestimates the supremum, so a budget that the
+measured terms do not account for points to sensitivity spikes between the
+sample points. The sample distortion $\Dist_H(\phi)$ is reported alongside.
+The Jacobian consistency \eqref{eq:topo-jc} of each pair is reported with
+them.
+\item[D3, realizability.] The counterfactual error of \eqref{eq:topo-real}
+where recombined inputs exist, the one-sided Hausdorff distance otherwise,
+and persistence of $H\hookrightarrow H\cup I$ in degrees zero and one on
+subsamples of at most a few thousand states. For variables whose values carry
+topology, the class-space comparison of Appendix~\ref{app:topo-struct} is
+added.
+\end{description}
+D1 is observational. The benchmark of \cite{meloux2026} found that only causal
+metrics with faithfulness tests on unmapped variables discriminated reliably,
+so D1 alone is not expected to discriminate. D2 and D3 use the interchange
+constraint; they enter the decision experiment as additional rivals and as
+candidate components of the complete protocol of H-A4.
+
+\begin{hypbox}{H-A8 (stretch budgets separate computed variables).}
+On configurations with valid explanations in the decision experiment, the
+network-side term of \eqref{eq:topo-budget} is nonpositive on most evaluation
+pairs. On configurations with manufactured alignments of computed variables---the
+equality bits of hierarchical equality on untrained networks, and alignments
+at loci before $V$ is computed---it is positive, and D2 attributes it to
+stretch or to off-manifold sensitivity, including for alignments that pass
+i.i.d.\ held-out IIA. For copied variables such as the indirect-object name,
+budgets are not expected to separate.
+\end{hypbox}
+
+\begin{hypbox}{H-A9 (counterfactual states).}
+Valid alignments on ground-truth models keep the counterfactual error
+\eqref{eq:topo-real} within a small multiple of the nearest-neighbour spacing
+of $H$ and leave the persistence of $H\hookrightarrow H\cup I$ nearly trivial.
+Manufactured alignments that pass distribution-shifted held-out IIA,
+including those for copied variables, place intervened states off the natural
+manifold.
+\end{hypbox}
+
+\begin{keybox}{Proof target T7: metric certificates.}
+\begin{description}[style=nextline,leftmargin=1.2em]
+\item[T7a, finite realizability by diffeomorphisms.] Status: proved
+(Appendix~\ref{app:topo-blind}).
+\item[T7b, stretch budget and its persistence form.] Status: proved
+(Appendix~\ref{app:topo-stretch}); the rate for geometry blind to $V$ rests on
+a standard Poisson approximation \cite{jammalamadaka1986} and is checked
+numerically.
+\item[T7c, interleaving and realizability bounds.] Status: proved from
+standard stability results (Appendices~\ref{app:topo-interleave}
+and~\ref{app:topo-real}).
+\item[T7d, prior mass of distortion.] Status: proved for additive-coupling
+networks with Gaussian priors; the consequence for code lengths needs the fit
+assumption on $\Delta_n$ to be established for a concrete family.
+\item[T7e, distortion and learning coefficients.] Whether the local learning
+coefficient of an alignment family grows with the distortion of the maps that
+fit the targets. Status: open.
+\item[T7f, J-lens distortion.] Status: proved
+(Appendix~\ref{app:topo-jlens}); the Jacobian-consistency statistic is a
+proposed diagnostic without a guarantee.
+\end{description}
+\end{keybox}
+
+\subsection{The Jacobian lens as a parameter-free alignment}
+\label{app:topo-jlens}
+
+\LAssess{} The Jacobian lens of \cite{gurnee2026workspace} reads a
+mid-layer state through the network's own averaged Jacobian. It was built to
+study verbalizable content, but its coordinate swap is a distributed
+interchange intervention whose subspace is given analytically rather than
+learned. That makes it an alignment family with no fitted parameters beyond
+a layer band and a sparsity level, and therefore the floor of the complexity
+ladder in the decision experiment, below the identity map only in that it
+uses a basis supplied by the network's Jacobian instead of its neurons. The
+construction is tied to vocabulary tokens, so it applies to variables whose
+values are tokens, such as names or days, and to other variables only
+through a token proxy. Its originators call it an imperfect tool, and
+commentators have noted an omitted logit-lens comparison, a low
+signal-to-noise ratio and the misleading name: the ``J-space'' is a union
+of cones, not a subspace.
+
+\paragraph{Construction.} For layer $\ell$, $J_\ell=\E\bigl[\partial
+h_{L,t'}/\partial h_{\ell,t}\bigr]$ is the Jacobian of the final-layer
+state at later positions $t'\ge t$ with respect to the layer-$\ell$ state,
+averaged over positions and about a thousand prompts. The J-vector of token
+$w$ is the row $v_w=(W_UJ_\ell)_w$, the average direction at layer $\ell$
+that makes $w$ more likely later. The J-space at sparsity $k$ is the set of
+nonnegative combinations of at most $k$ J-vectors, fitted by gradient
+pursuit; its component carries about 6--15\% of activation variance, so most
+of the geometry studied in Appendices~\ref{app:topo-stretch}
+and~\ref{app:topo-real} lives in its complement. For a variable $V$ with
+token values $w_1,\dots,w_m$, let $V_J=[v_{w_1},\dots,v_{w_m}]$ with columns
+normalized to unit length and $Q$ an orthonormal basis of the orthogonal
+complement of its span. The J-lens alignment is the linear bijection
+\begin{equation}
+\phi_J(h)=\bigl(V_J^{+}h,\ Q^{\!\top}h\bigr),\qquad
+\phi_J^{-1}(c,u)=V_Jc+Qu,
+\label{eq:topo-jlens}
+\end{equation}
+whose interchange intervention \eqref{eq:topo-interv} transplants the
+J-coordinates of the source into the base and leaves the complement of the
+base untouched. The in-place swap of \cite{gurnee2026workspace} is the
+special case that exchanges two coordinates of one state.
+
+\begin{keybox}{Distortion of the J-lens alignment (internal calculation).}
+Let $\sigma_{\max}\ge\sigma_{\min}>0$ be the extreme singular values of
+$V_J$. Then
+\begin{equation}
+\Lip(\phi_J)=\max\Bigl(\frac1{\sigma_{\min}},1\Bigr),\qquad
+\Lip(\phi_J^{-1})=\max(\sigma_{\max},1),\qquad
+\Dist(\phi_J)=\frac{\sigma_{\max}}{\sigma_{\min}}=\operatorname{cond}(V_J),
+\label{eq:topo-jlens-dist}
+\end{equation}
+the last equality because unit columns give $\sigma_{\max}\ge1\ge\sigma_{\min}$.
+For two values whose J-vectors meet at angle $\theta\le\pi/2$,
+$\Dist(\phi_J)=\cot(\theta/2)$. The in-place swap of two J-vectors of equal
+norm is a reflection of their plane and hence an isometry.
+\end{keybox}
+
+\noindent\emph{Proof.} For $h=h_\parallel+h_\perp$ split along
+$\operatorname{span}V_J$ and its complement,
+$\|\phi_J(h)\|^2=\|V_J^+h_\parallel\|^2+\|h_\perp\|^2$ and
+$\|\phi_J^{-1}(c,u)\|^2=\|V_Jc\|^2+\|u\|^2$, since $V_Jc\perp Qu$; the
+suprema are attained on the top and bottom singular directions. Two unit
+columns at angle $\theta$ have $\sigma^2=1\pm\cos\theta$. The swap fixes
+$v_s+v_t$ and negates $v_s-v_t$, which are orthogonal when the norms are
+equal. $\square$
+
+\LNum{} The three identities hold exactly on 30 random bases, 12 angles
+and 24 swap configurations (Appendix~\ref{app:topo-checks}).
+
+\paragraph{Consequences for the certificates.} \LCalc{} Because
+$\Dist(\phi_J)$ is a property of the network alone, the stretch budget
+\eqref{eq:topo-sep} becomes a statement about the network:
+$\operatorname{cond}(V_J)\,\Lambda\ge\gamma/\sep_V$. If the J-vectors of the
+values of $V$ are well separated, the alignment has no stretch to offer and
+must succeed or fail on the network's own separation and sensitivity. The
+map is also the mean-field version of the sensitivity term: $W_UJ_\ell$ is
+the average of $Dg$ over natural states, so the segment sensitivity
+$\Lambda_{b,s,s'}$ of \eqref{eq:topo-budget} splits into the part predicted
+by the averaged Jacobian and a residual. Writing $\Delta=h'(b,s)-h'(b,s')$
+and $\delta$ for the actual logit difference, the \emph{Jacobian
+consistency}
+\begin{equation}
+\mathrm{JC}_{b,s,s'}=\frac{\|\delta-W_UJ_\ell\Delta\|}{\|\delta\|}
+\label{eq:topo-jc}
+\end{equation}
+is small when the intervention acts through the directions the downstream
+computation uses on average, and large when it relies on local sensitivity
+that the average does not show. The latter is what a manufactured alignment
+paying its budget through off-manifold sensitivity must do. Two cautions
+remain. A J-vector is a direction that \emph{would} change the output, not
+one the model demonstrably uses; this is the setting of the interpretability
+illusion of \cite{makelov2024}, so the realizability statistics D3 are the
+right complement. And the J-lens cannot route information across positions;
+on a task that requires it, a low score reflects the locus, not the
+variable.
+
+\begin{hypbox}{H-A10 (the J-lens rival).}
+On token-valued variables in the decision experiment, the J-lens alignment
+reaches an interchange-intervention accuracy within the margin of the best
+rotation at loci where the value is verbalizable, at zero parametric cost,
+and $\operatorname{cond}(V_J)$ stays below a small constant. On untrained
+networks it fails for copied variables such as the indirect-object name,
+where learned reversible maps succeed, because it has no freedom to route.
+Manufactured alignments that pass held-out IIA show Jacobian consistency
+\eqref{eq:topo-jc} well above that of valid ones on the same pairs.
+\end{hypbox}
+
+\subsection{Numerical checks}
+\label{app:topo-checks}
+
+\LNum{} The checks concern the stated models only. Rips persistence and
+bottleneck distances use the \texttt{gudhi} library, version~3.13.
+
+\begin{center}\small
+\begin{tabular}{@{}P{5.9cm}P{9.6cm}@{}}
+\toprule
+Claim and script & Result \\
+\midrule
+Interleaving bound \eqref{eq:topo-interleave} in degrees zero and one; first
+kernel birth equals $\sep_V$. \newline\texttt{topo\_interleave\_check.py}
+& Held in 60 of 60 trials with $\Dist_H(\phi)$ from 1.04 to 235; largest ratio
+of the two sides 1.000 in degree zero and 0.996 in degree one. Kernel identity
+exact in 20 of 20 clouds. \\ \addlinespace
+Poisson law for $\sep_V$ under geometry blind to $V$.
+\newline\texttt{topo\_bichromatic\_check.py}
+& Fitted slopes $-0.991$, $-1.000$ ($k=2$), $-0.655$, $-0.669$ ($k=3$),
+$-0.502$, $-0.509$ ($k=4$), for two and three equiprobable classes; median
+over prediction between 0.91 and 1.09 for all $n$ (200 replicates each). \\
+\addlinespace
+Realizability bounds \eqref{eq:topo-real} and \eqref{eq:topo-real-dgm}.
+\newline\texttt{topo\_realizability\_check.py}
+& Held in 60 of 60 trials with $\Dist(\phi)\le(1+\beta)/(1-\beta)$,
+$\beta$ from 0.1 to 0.9; largest error over bound 0.59, median 0.27. \\
+\addlinespace
+Death-to-birth ratio of the degree-one bar for $p$ evenly spaced values.
+\newline\texttt{topo\_circle\_check.py}
+& Matches $\sin(\pi\lceil p/3\rceil/p)/\sin(\pi/p)$ to four decimals for
+$p=4,5,6,7,8,10,12,24$. \\
+\addlinespace
+Distortion of the J-lens alignment \eqref{eq:topo-jlens-dist}, the
+$\cot(\theta/2)$ law, and the swap isometry.
+\newline\texttt{topo\_jlens\_check.py}
+& Exact on 30 random bases ($d=12$, $m=3$), 12 angles and 24 swap
+configurations; sampled Lipschitz constants never exceed the predicted
+values; the swap is an isometry exactly when the two norms are equal. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Notation and evidence labels}
+
+\begin{longtable}{@{}P{3.2cm}P{11.7cm}@{}}
+\toprule
+Symbol or term & Meaning in this plan \\
+\midrule
+\endhead
+$\lambda$, $m$ & Learning coefficient (real log canonical threshold) and
+multiplicity, global or local to a region or solution. \\ \addlinespace
+$F_n$, $F_U$ & Bayes free energy, the length of the mixture code; its
+restriction to a region $U$. \\ \addlinespace
+$L^A(n)$ & Prequential code length of learner $A$ on $n$ labels. \\ \addlinespace
+$\DL(n)$, $G(n)$ & Stage~1: prequential code length of fixed counterfactual targets under a network with a learned alignment map; gain over a control on the same targets, in bits. \\ \addlinespace
+$\Delta\ell$, $\Delta\lambda$ & Faithfulness gap and complexity gap
+between a control and a hypothesis. \\ \addlinespace
+Controls & Untrained network, wrong locus or other map family on the same targets; a label-only code without access to the algorithm. \\ \addlinespace
+$r$, $\kappa$ & Growth factor of prequential blocks, which multiplies logarithmic coefficients by $(r-1)/\ln r$; a learner's generalization coefficient. \\ \addlinespace
+EDL, $\mathrm{AC}_A$ & Excess description length, the prequential code length minus $n$ times the final test loss; the algorithmic predictive cost of learner $A$ relative to the Bayes predictor. \\ \addlinespace
+$D$, $k^*$ & Depth, the log-odds against the capable region under the local posterior; the number of demonstrations needed to flip it. \\ \addlinespace
+$E$ & An e-value: a nonnegative statistic with expectation at most one under
+the null; $\log_2E$ is evidence in bits. \\ \addlinespace
+$\chi_\phi$ & Susceptibility of an observable $\phi$ to a shift of the data distribution. \\ \addlinespace
+IIA & Interchange-intervention accuracy. \\ \addlinespace
+$\Dist(\phi)$, $\Dist_H(\phi)$ & Distortion $\Lip(\phi)\Lip(\phi^{-1})$ of an
+alignment map, globally and on the sample of states
+(Appendix~\ref{app:topo}). \\ \addlinespace
+$\sep_V$, $\rho_V$ & Smallest distance between states of inputs with
+different values of $V$, the first bar of the $V$-coloured kernel diagram;
+separation ratio $\Lambda_{\rm nat}\sep_V/\gamma$. \\ \addlinespace
+$\gamma$, $\Lambda$ & Output margin in logit space; sensitivity of the
+network's computation downstream of the locus. \\ \addlinespace
+$J_\ell$, $V_J$, $\phi_J$ & Averaged Jacobian from layer $\ell$ to the final
+layer; matrix of unit J-vectors of a variable's values; the J-lens
+alignment (Appendix~\ref{app:topo-jlens}). \\ \addlinespace
+$\mathrm{JC}$ & Jacobian consistency of an intervention pair: relative
+error of the averaged Jacobian's prediction of the logit change. \\
+\addlinespace
+$\chi_{\rm exit}$ & Scaling exponent of the exit cross-section of a
+flat-set tube. \\ \addlinespace
+$\hat T$, $\hat\lambda$ & Thermometer estimates from the first two
+moments of the excess loss. \\ \addlinespace
+Evidence labels & Known result, internal calculation, numerical check,
+hypothesis, proposed test and assessment, as defined in
+Section~\ref{sec:purpose}; a dagger marks unverified bibliographic
+details. \\
+\bottomrule
+\end{longtable}
+
+\section{Change log}
+
+\paragraph{Version 7.3 (19 October 2026): the Jacobian lens as a rival.}
+\begin{enumerate}[leftmargin=*]
+\item Appendix~\ref{app:topo-jlens} adds the Jacobian lens of
+\cite{gurnee2026workspace} as a parameter-free linear alignment for
+token-valued variables. Its distortion is the condition number of the
+matrix of J-vectors, a property of the network alone, so the stretch budget
+becomes a network statement.
+\item The averaged Jacobian splits the sensitivity term of the budget into a
+predicted part and a residual; the Jacobian-consistency statistic joins
+diagnostic D2. Hypothesis H-A10 and proof target T7f are added.
+\end{enumerate}
+
+\paragraph{Version 7.2 (12 October 2026): topological and metric certificates.}
+\begin{enumerate}[leftmargin=*]
+\item Appendix~\ref{app:topo} asks whether persistent homology can test
+alignment maps. Topology alone cannot: every alignment family in use is a
+homeomorphism, and manufactured alignments are realizable by diffeomorphisms
+isotopic to the identity.
+\item Interchange interventions impose a stretch budget relating the map's
+distortion, the downstream sensitivity and the network's separation of the
+values of $V$, which is the first bar of a chromatic persistence diagram.
+\item A realizability bound for counterfactual states, a class-space test for
+variables whose values carry topology, and a prior-mass bound linking
+distortion to Stage~1 code lengths are added, with diagnostics D1--D3,
+hypotheses H-A8 and H-A9, and proof target T7.
+\end{enumerate}
+
+\paragraph{Version 7.1 (24 September 2026): second review.}
+\begin{enumerate}[leftmargin=*]
+\item Every gate has a stop rule: failing lines stop as paper projects,
+further work needs a bounded feasibility budget and a new hypothesis with
+preliminary evidence, and Stage~2 needs its own pilot. Promises that every
+outcome is publishable are removed.
+\item Project~B separates recoverability, the primary outcome, from the
+training history of organisms, a secondary analysis.
+\item Products of e-values are used only with proven conditional validity;
+otherwise evidence is combined by prespecified weighted averages.
+\item The batching remainder is $o(\log n)$ in general and $O(1)$ under a
+stronger assumption; the Occam regime requires equal conditional target
+laws; derivatives are taken along a continuous population-loss tilt.
+\item Stage~2 fixes its unit of observation and freezes its intervention
+protocol before scoring; H-A6 is softened.
+\end{enumerate}
+
+\paragraph{Version 7.0 (24 September 2026): response to an external review.}
+\begin{enumerate}[leftmargin=*]
+\item Project~A becomes two-staged. Stage~1 measures alignment sample
+efficiency on fixed targets, with controls whose information access is
+specified; Stage~2 codes the network's own interventional behaviour with
+competing explanations on shared data (Section~\ref{sec:projA}).
+\item Close prior work on prequential causal description length is
+incorporated, and distribution-shifted held-out accuracy and complete
+intervention protocols become primary rivals.
+\item A theory strand is added: the batching factor, derived and checked;
+learner coefficients; prior terms; and certified tests
+(Section~\ref{sec:atests}; Appendix~\ref{app:batch}).
+\item Corrections: EDL subtracts test loss; perfect accuracy does not imply
+equal log loss; smaller maps do not imply smaller learning coefficients;
+universal inference needs certified bounds; sequential e-values need fresh
+data; and adding demonstrations differs from replacing data, with the flip
+now computed exactly by reweighting.
+\item Project~B is narrowed to one geometric statistic, validated on exact
+masses before use, with recoverability as the operational target
+(Section~\ref{sec:projB}).
+\item The plan opens with a six-week decision experiment, and publication
+probabilities are replaced by scenarios and readiness indicators
+(Sections~\ref{sec:schedule} and~\ref{sec:outlook}).
+\end{enumerate}
+
+\paragraph{Version 6.0 (from version 5).}
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Organizing principle.} The question changes from whether SLT
+invariants control training dynamics to how much evidence, in bits,
+supports an interpretability or capability claim. SLT supplies the
+complexity term (Sections~\ref{sec:purpose} and~\ref{sec:primer}).
+\item \textbf{Flagship.} New Project~A on the interventional
+description-length gain, addressing the non-linear representation
+dilemma, with a decomposition into faithfulness and complexity gaps and
+ground-truth tests (Section~\ref{sec:projA}; Appendix~\ref{app:codes}).
+\item \textbf{Safety project.} New Project~B on suppressed versus absent
+capabilities, with an exact split of excess description length and local
+free-energy measures of suppression depth. The emergent-misalignment
+study becomes a case (Section~\ref{sec:projB}).
+\item \textbf{Dynamics.} Closed in a short note: scoped impossibility,
+corrected flat-set law and discrete-chain corrections
+(Section~\ref{sec:p0}; Appendix~\ref{app:p0}).
+\item \textbf{Instruments.} The thermometer and identifiability checks
+are retained as calibration tools, with their limits stated
+(Appendix~\ref{app:calib}).
+\item \textbf{Literature.} Incorporates the September 2026 sweep on
+causal abstraction, description-length interpretability, elicitation,
+sandbagging audits, stochastic-gradient MCMC at scale and emergent
+misalignment.
+\item \textbf{Planning.} Effort, compute, contacts, gates, descoping and
+publication probabilities are made explicit
+(Sections~\ref{sec:schedule}--\ref{sec:risks}).
+\item \textbf{Conventions.} Evidence labels now include ``hypothesis'' and
+``assessment''.
+\end{enumerate}
+
+\paragraph{Revision 6.1 (23 September 2026): full-time commitment.}
+\begin{enumerate}[leftmargin=*]
+\item The effort assumption changes from half time to full time; compute
+is available and is no longer a planning constraint
+(Section~\ref{sec:purpose}).
+\item Project~A splits into A1, a method paper aimed at ICML 2027 with
+NeurIPS 2027 as a second chance, and A2, a language-model-scale safety
+application with proofs. New hypothesis H-A5 and proof targets T1--T4
+(Section~\ref{sec:a1a2}).
+\item Project~B starts in month 3, runs up to eight billion parameters, and
+aims at NeurIPS 2027 as a stretch and ICLR 2028 as the base
+(Section~\ref{sec:projB}).
+\item Gates move earlier. The descoping ladder is replaced by reserve
+release rules and a two-project concurrency rule
+(Section~\ref{sec:schedule}).
+\item The publication outlook and risks are updated
+(Sections~\ref{sec:outlook} and~\ref{sec:risks}).
+\end{enumerate}
+
+\paragraph{Revision 6.2 (23 September 2026): corrections after internal review.}
+\begin{enumerate}[leftmargin=*]
+\item The fixed-error-rate likelihood behind the gain decomposition was
+not analytic in the parameters. It is replaced by randomized-response
+targets, which make the model realizable with interior optima
+(Appendix~\ref{app:codes}; proof target T1).
+\item Two hypotheses were true by construction, because optimizer effects
+on EDL lie in the algorithmic term by definition. H-B1 and H-B4 now make
+testable quantitative claims, and the EDL identity is stated as exact only
+under a Bayesian data model (Section~\ref{sec:projB}).
+\item Held-out IIA, the generalization criterion suggested by Sutter et
+al., becomes the decisive rival for Project~A, with an argument for why
+the prequential code should beat it (Section~\ref{sec:projA}; H-A1; A-G1).
+\item Calibrated uplift becomes the main rival for Project~B.
+\item The gain is described as relative fit rather than formal evidence,
+and the role of SLT in Project~A is stated as supporting.
+\item Publication probabilities now include the chance that A-G1 fails.
+The P0 note goes to the Alignment Forum first and to arXiv after the ICML
+deadline, and the ICML rebuttal is scheduled.
+\end{enumerate}
+
+\paragraph{Revision 6.3 (23 September 2026): e-values, susceptibilities and new testbeds.}
+\begin{enumerate}[leftmargin=*]
+\item E-values are added as a statistical layer (Section~\ref{sec:evalues}).
+For Project~A they separate a falsification regime, with prior-free
+tests, from an Occam regime, where evidence is necessarily relative to a
+prior (Section~\ref{sec:atests}; T5). For Project~B they give audits with
+false-positive guarantees.
+\item Susceptibilities are added (Section~\ref{sec:suscept}): a data-side
+check for abstractions (H-A6), susceptibility clusters as candidate
+variables, a prediction of elicitation cost from local samples (H-B5),
+and a calibration suite for susceptibility estimates
+(Section~\ref{sec:tools}).
+\item Project~B gains a rare-output route using posterior proposals (H-B6),
+funded from the reserve, and two organisms: sleeper-agent models and a
+hidden-objective model.
+\item A2 adds sparse-autoencoder and transcoder features as candidates.
+Positioning adds ARC's surprise accounting and Resolution's susceptibility
+and patterning work.
+\item Effort, reserve rules, contacts and risks are updated accordingly.
+\end{enumerate}
+
+\paragraph{Revision 6.4 (23 September 2026): audit corrections.}
+\begin{enumerate}[leftmargin=*]
+\item The unlock-cost formula is stated consistently as
+$k^*\approx D/(\beta\Delta\ell_C)$ in Section~\ref{sec:projB} and
+Appendix~\ref{app:codes}, with $\delta$ as its local-sample estimate.
+\item Claims are tightened where they ran ahead of the evidence. The
+abstract presents the susceptibility and rare-output uses as tests; the
+dilemma regime has a faithfulness gap close to, not exactly, zero;
+universal inference requires a prequential numerator; the conformal audit
+guarantee requires exchangeability with the benign library; and the
+sleeper-agent and hidden-objective organisms are re-created on open models.
+\item H-A6 moves next to H-A5, with a concrete observable, and a pointer to
+H-B4 is added.
+\item The positioning paragraph of Project~A is reordered; the notation
+covers e-values, susceptibilities and $\delta$; the tooling row of
+Section~\ref{sec:purpose} is updated; and the ICLR 2026 title of the
+``Almost Bayesian'' paper is used.
+\end{enumerate}
+
+\section{Archive of completed checks}
+
+The following scripts and outputs accompany this document. They concern
+the stated mathematical models only.
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[\texttt{discrete\_sgd\_check.py}, \texttt{.json}] Monte Carlo of the
+balanced discrete update: step-size sweep, label-noise case and fixed
+$\eta/b$.
+\item[\texttt{trapped\_check.py}] Non-exit fraction and final positions of
+trapped paths under label noise.
+\item[\texttt{tube\_mfpt.py}, \texttt{.json}] Finite-difference
+mean-first-passage times in flat-set tubes.
+\item[\texttt{identifiability.py}, \texttt{.json}] Collinearity of
+logarithmic complexity terms against offsets.
+\item[\texttt{thermometer\_check.py}, \texttt{.json}] Quadrature check of the loss-fluctuation thermometer.
+\item[\texttt{batching\_check.py}, \texttt{.json}] Exact cumulative excess of Gaussian-mean learners under different block schemes.
+\item[\texttt{topo\_interleave\_check.py}, \texttt{.json}] Interleaving bound
+for bi-Lipschitz maps and the kernel identity for $\sep_V$.
+\item[\texttt{topo\_bichromatic\_check.py}, \texttt{.json}] Closest
+bichromatic pairs under geometry blind to $V$.
+\item[\texttt{topo\_realizability\_check.py}, \texttt{.json}] Realizability
+bound for counterfactual states and its diagram form.
+\item[\texttt{topo\_circle\_check.py}, \texttt{.json}] Degree-one bars of
+evenly spaced cyclic values. All four scripts import \texttt{common.py}.
+\item[\texttt{topo\_jlens\_check.py}, \texttt{.json}] Distortion of the
+J-lens alignment, the $\cot(\theta/2)$ law, and the swap isometry.
+\end{description}
+
+\clearpage
+\addcontentsline{toc}{section}{References}
+\begin{thebibliography}{99}\small\raggedright
+\setlength{\itemsep}{3pt}
+
+\bibitem{adamaszek2017}\unv{} M.~Adamaszek and H.~Adams. The Vietoris--Rips
+complexes of a circle. \emph{Pacific Journal of Mathematics} 290(1):1--40,
+2017.
+
+\bibitem{angell2026} R.~Angell, R.~Singhal, Z.~Horvitz, et al.
+Estimating tail risks in language model output distributions. \emph{ICML
+2026}; arXiv:2604.22167.
+
+\bibitem{aoyagiwatanabe2005} M.~Aoyagi and S.~Watanabe. Stochastic
+complexities of reduced rank regression in Bayesian estimation.
+\emph{Neural Networks} 18(7):924--933, 2005.
+
+\bibitem{arditi2024}\unv{} A.~Arditi, O.~Obeso, A.~Syed, D.~Paleka,
+N.~Panickssery, W.~Gurnee and N.~Nanda. Refusal in language models is
+mediated by a single direction. \emph{NeurIPS 2024}; arXiv:2406.11717.
+
+\bibitem{ayonrinde2024}\unv{} K.~Ayonrinde, M.~T.~Pearce and L.~Sharkey.
+Interpretability as compression: reconsidering SAE explanations of neural
+activations with MDL-SAEs. Preprint, arXiv:2410.11179, 2024.
+
+\bibitem{baker2026} G.~Baker, G.~Wang, J.~Hoogland, V.~Pathak and
+D.~Murfet. Structural inference: interpreting small language models with
+susceptibilities. \emph{ICLR 2026}; arXiv:2504.18274.
+
+\bibitem{barannikov2022}\unv{} S.~Barannikov, I.~Trofimov, N.~Balabin and
+E.~Burnaev. Representation topology divergence: a method for comparing neural
+network representations. \emph{ICML 2022}; arXiv:2201.00058.
+
+\bibitem{betley2026} J.~Betley, N.~Warncke, A.~Sztyber-Betley, D.~Tan,
+X.~Bao, M.~Soto, M.~Srivastava, N.~Labenz and O.~Evans. Training large
+language models on narrow tasks can lead to broad misalignment.
+\emph{Nature} 649:584--589, 2026.
+
+\bibitem{bhalla2026}\unv{} U.~Bhalla, E.~Bigelow, C.~Rager, T.~Haklay and
+R.~Sarfati. Manifold steering reveals the shared geometry of neural network
+representation and behavior. Preprint, arXiv:2605.05115, 2026.
+
+\bibitem{bitsthatcount2026}\unv{} Bits that count: quantifying and
+predicting capabilities of language models. ICML 2026 poster (authors not
+verified).
+
+\bibitem{blierollivier2018} L.~Blier and Y.~Ollivier. The description
+length of deep learning models. \emph{NeurIPS 31}, 2018. arXiv:1802.07044.
+
+\bibitem{brown2026} J.~R.~Brown, P.~Leask and L.~McKinney. Evil spectra:
+how optimisers can amplify or suppress emergent misalignment. Preprint,
+arXiv:2606.31591, 2026.
+
+\bibitem{bushnaq2024}\unv{} L.~Bushnaq, J.~Mendel, et al. Using degeneracy
+in the loss landscape for mechanistic interpretability. Preprint,
+arXiv:2405.10927, 2024.
+
+\bibitem{cai2026} Y.~Cai. Bypassing minimization bias: a shift-invariant
+variance estimator for off-equilibrium local learning coefficients.
+Preprint, arXiv:2606.22389, 2026.
+
+\bibitem{chazal2014} F.~Chazal, V.~de Silva and S.~Oudot. Persistence
+stability for geometric complexes. \emph{Geometriae Dedicata}
+173:193--214, 2014. arXiv:1207.3885.
+
+\bibitem{chazal2016} F.~Chazal, V.~de Silva, M.~Glisse and S.~Oudot.
+\emph{The Structure and Stability of Persistence Modules}. SpringerBriefs in
+Mathematics, Springer, 2016.
+
+\bibitem{clarkebarron1990} B.~S.~Clarke and A.~R.~Barron.
+Information-theoretic asymptotics of Bayes methods. \emph{IEEE
+Transactions on Information Theory} 36(3):453--471, 1990.
+
+\bibitem{cullen2026} B.~Cullen, S.~Estan-Ruiz, R.~Danait and J.~Li. A
+basin-selection perspective on grokking via singular learning theory.
+Preprint, arXiv:2603.01192 (v3, May 2026).
+
+\bibitem{cultrera2025chromatic} S.~Cultrera di Montesano, O.~Draganov,
+H.~Edelsbrunner and M.~Saghafian. Chromatic alpha complexes.
+\emph{Foundations of Data Science} 8:30--62, 2025; arXiv:2212.03128.
+
+\bibitem{dawid1984} A.~P.~Dawid. Present position and potential
+developments: some personal views. Statistical theory: the prequential
+approach. \emph{Journal of the Royal Statistical Society A}
+147(2):278--292, 1984.
+
+\bibitem{dinh2015}\unv{} L.~Dinh, D.~Krueger and Y.~Bengio. NICE: non-linear
+independent components estimation. ICLR 2015 workshop; arXiv:1410.8516.
+
+\bibitem{donoway2026} E.~Donoway, H.~Joren, F.~Roger and J.~Leike. Excess
+description length of learning generalizable predictors. Preprint,
+arXiv:2601.04728, 2026.
+
+\bibitem{elicitation2025}\unv{} Quantifying elicitation of latent
+capabilities in language models. NeurIPS 2025 poster (authors not
+verified).
+
+\bibitem{engels2025} J.~Engels, E.~J.~Michaud, I.~Liao, W.~Gurnee and
+M.~Tegmark. Not all language model features are one-dimensionally linear.
+\emph{ICLR 2025}; arXiv:2405.14860.
+
+\bibitem{gauderis2026} W.~Gauderis, T.~Dooms, S.~T.~Holmer, K.~Ayonrinde
+and G.~A.~Wiggins. From mechanistic to compositional interpretability.
+ICML 2026; arXiv:2605.08934. (The third author's surname is spelled
+differently across listings.)
+
+\bibitem{geiger2024das}\unv{} A.~Geiger, Z.~Wu, C.~Potts, T.~Icard and
+N.~D.~Goodman. Finding alignments between interpretable causal variables
+and distributed neural representations. \emph{CLeaR 2024};
+arXiv:2303.02536.
+
+\bibitem{geiger2025ca}\unv{} A.~Geiger, D.~Ibeling, A.~Zur, et al. Causal
+abstraction: a theoretical foundation for mechanistic interpretability.
+Preprint, arXiv:2301.04709.
+
+\bibitem{goldowskydill2025}\unv{} N.~Goldowsky-Dill, B.~Chughtai,
+S.~Heimersheim and M.~Hobbhahn. Detecting strategic deception using
+linear probes. \emph{ICML 2025}; arXiv:2502.03407.
+
+\bibitem{gomez2017}\unv{} A.~N.~Gomez, M.~Ren, R.~Urtasun and R.~B.~Grosse.
+The reversible residual network: backpropagation without storing
+activations. \emph{NeurIPS 2017}; arXiv:1707.04585.
+
+\bibitem{gordon2026} A.~Gordon, G.~Baker, G.~Wang, W.~Snell, S.~van
+Wingerden and D.~Murfet. Towards spectroscopy: susceptibility clusters in
+language models. Preprint, arXiv:2601.12703, 2026.
+
+\bibitem{gozzi2025} F.~J.~Gozzi, M.~A.~Cerdeiro and P.~E.~Riera. Persistent
+cost of Lipschitz maps. Preprint, arXiv:2511.07674 (v2, March 2026).
+
+\bibitem{greenblatt2024}\unv{} R.~Greenblatt, F.~Roger, D.~Krasheninnikov
+and D.~Krueger. Stress-testing capability elicitation with password-locked
+models. \emph{NeurIPS 2024}; arXiv:2405.19550.
+
+\bibitem{gross2024}\unv{} J.~Gross et al. Compact proofs of model
+performance via mechanistic interpretability. \emph{NeurIPS 2024};
+arXiv:2406.11779.
+
+\bibitem{grunwald2007} P.~D.~Gr\"unwald. \emph{The Minimum Description
+Length Principle}. MIT Press, 2007.
+
+\bibitem{grunwald2024safe} P.~Gr\"unwald, R.~de Heide and W.~M.~Koolen.
+Safe testing. \emph{Journal of the Royal Statistical Society B}
+86(5):1091--1128, 2024.
+
+\bibitem{gurnee2026workspace} W.~Gurnee, N.~Sofroniew, A.~Pearce,
+M.~Piotrowski, I.~Kauvar, R.~Chen, A.~Soligo, P.~Bogdan, E.~Ong, R.~Wang,
+T.~B.~Thompson, D.~Abrahams, S.~Kantamneni, E.~Ameisen, J.~Batson and
+J.~Lindsey. Verbalizable representations form a global workspace in language
+models. Transformer Circuits Thread, Anthropic, 6 July 2026.
+\url{https://transformer-circuits.pub/2026/workspace/index.html}
+
+\bibitem{hennick2026} M.~Hennick and S.~De Baerdemacker. Almost Bayesian: dynamics of SGD through singular learning theory. \emph{ICLR 2026};
+arXiv:2503.22478 (v2, March 2026).
+
+\bibitem{hewittliang2019} J.~Hewitt and P.~Liang. Designing and
+interpreting probes with control tasks. \emph{EMNLP 2019};
+arXiv:1909.03368.
+
+\bibitem{hilton2024}\unv{} J.~Hilton. Formal verification, heuristic
+explanations and surprise accounting. Alignment Research Center blog,
+2024.
+
+\bibitem{hirsch1976} M.~W.~Hirsch. \emph{Differential Topology}. Graduate
+Texts in Mathematics 33. Springer, 1976.
+
+\bibitem{hitchcock2025} R.~Hitchcock and J.~Hoogland. From global to local:
+a scalable benchmark for local posterior sampling. Preprint,
+arXiv:2507.21449 (v2, August 2026).
+
+\bibitem{hubinger2024}\unv{} E.~Hubinger et al. Sleeper agents: training
+deceptive LLMs that persist through safety training. Preprint,
+arXiv:2401.05566, 2024.
+
+\bibitem{interpbench2024} R.~Gupta, I.~Arcuschin, T.~Kwa and
+A.~Garriga-Alonso. InterpBench: semi-synthetic transformers for evaluating
+mechanistic interpretability techniques. \emph{NeurIPS 2024 Datasets and
+Benchmarks}; arXiv:2407.14494.
+
+\bibitem{jammalamadaka1986}\unv{} S.~R.~Jammalamadaka and S.~Janson. Limit
+theorems for a triangular scheme of U-statistics with applications to
+inter-point distances. \emph{The Annals of Probability} 14(4):1347--1358,
+1986.
+
+\bibitem{kreer2026} P.~A.~Kreer, W.~Wu, M.~Adam, Z.~Furman and J.~Hoogland.
+Bayesian influence functions for Hessian-free data attribution.
+\emph{ICLR 2026}; arXiv:2509.26544.
+
+\bibitem{larsson2026} M.~Larsson. Langevin dynamics along the zero set of
+real-analytic potentials. Preprint, arXiv:2608.09840, 2026.
+
+\bibitem{lau2025llc} E.~Lau, Z.~Furman, G.~Wang, D.~Murfet and S.~Wei. The
+local learning coefficient: a singularity-aware complexity measure.
+\emph{AISTATS 2025}, PMLR 258; arXiv:2308.12108.
+
+\bibitem{li2024wmdp}\unv{} N.~Li, A.~Pan, et al. The WMDP benchmark:
+measuring and reducing malicious use with unlearning. \emph{ICML 2024};
+arXiv:2403.03218.
+
+\bibitem{lucki2024}\unv{} J.~\L{}ucki, B.~Wei, Y.~Huang, P.~Henderson,
+F.~Tram\`er and J.~Rando. An adversarial perspective on machine
+unlearning for AI safety. Preprint, arXiv:2409.18025, 2024.
+
+\bibitem{ma2026} S.~Ma, Y.~Luo, Zhangji, C.~Xiao, A.~Gao, W.-H.~Huang, W.~Wang,
+Q.~Wu, X.~Li, J.~Wei and Q.~Zhang. Hidden APIs in language models:
+discovering reusable causal interfaces from forked futures. Preprint,
+arXiv:2607.27617, 2026.
+
+\bibitem{makelov2024}\unv{} A.~Makelov, G.~Lange and N.~Nanda. Is this the
+subspace you are looking for? An interpretability illusion for subspace
+activation patching. \emph{ICLR 2024}; arXiv:2311.17030.
+
+\bibitem{mandt2017} S.~Mandt, M.~D.~Hoffman and D.~M.~Blei. Stochastic
+gradient descent as approximate Bayesian inference. \emph{Journal of
+Machine Learning Research} 18(134):1--35, 2017.
+
+\bibitem{marks2025}\unv{} S.~Marks et al. Auditing language models for
+hidden objectives. Preprint, arXiv:2503.10965, 2025.
+
+\bibitem{meloux2025ident}\unv{} M.~M\'eloux, S.~Maniu, F.~Portet and
+M.~Peyrard. Everything, everywhere, all at once: is mechanistic
+interpretability identifiable? \emph{ICLR 2025}; arXiv:2502.20914.
+
+\bibitem{meloux2026} M.~M\'eloux, T.~Pimentel, F.~Portet and M.~Peyrard.
+Validating causal abstraction metrics on simulated complex systems.
+Preprint, arXiv:2607.00267, 2026.
+
+\bibitem{mib2025} A.~Mueller, A.~Geiger, S.~Wiegreffe, et al. MIB: a
+mechanistic interpretability benchmark. \emph{ICML 2025};
+arXiv:2504.13151.
+
+\bibitem{naitzat2020} G.~Naitzat, A.~Zhitnikov and L.-H.~Lim. Topology of
+deep neural networks. \emph{Journal of Machine Learning Research}
+21(184):1--40, 2020.
+
+\bibitem{patterningpractice2026}\unv{} Patterning in practice: debiasing
+reward models with susceptibilities. Preprint, arXiv:2609.00699, 2026
+(authors not verified).
+
+\bibitem{phalign2026}\unv{} Tracking representation dynamics in large
+language models with persistent homology. Preprint, arXiv:2606.19542, 2026
+(authors not verified).
+
+\bibitem{pimentel2020info} T.~Pimentel, J.~Valvoda, R.~H.~Maudslay,
+R.~Zmigrod, A.~Williams and R.~Cotterell. Information-theoretic probing
+for linguistic structure. \emph{ACL 2020}; arXiv:2004.03061.
+
+\bibitem{pimentel2020pareto} T.~Pimentel, N.~Saphra, A.~Williams and
+R.~Cotterell. Pareto probing: trading off accuracy for complexity.
+\emph{EMNLP 2020}; arXiv:2010.02180.
+
+\bibitem{ramdas2023}\unv{} A.~Ramdas, P.~Gr\"unwald, V.~Vovk and G.~Shafer.
+Game-theoretic statistics and safe anytime-valid inference.
+\emph{Statistical Science} 38(4):576--601, 2023.
+
+\bibitem{reguera2001} D.~Reguera and J.~M.~Rub\'i. Kinetic equations for
+diffusion in the presence of entropic barriers. \emph{Physical Review E}
+64:061106, 2001.
+
+\bibitem{rissanen1986} J.~Rissanen. Stochastic complexity and modeling.
+\emph{The Annals of Statistics} 14(3):1080--1100, 1986.
+
+\bibitem{shtarkov1987} Yu.~M.~Shtarkov. Universal sequential coding of
+single messages. \emph{Problems of Information Transmission}
+23(3):175--186, 1987.
+
+\bibitem{soligo2026} A.~Soligo, E.~Turner, S.~Rajamanoharan and N.~Nanda.
+Emergent misalignment is easy, narrow misalignment is hard. \emph{ICLR
+2026}; arXiv:2602.07852.
+
+\bibitem{sutter2025} D.~Sutter, J.~Minder, T.~Hofmann and T.~Pimentel. The
+non-linear representation dilemma: is causal abstraction enough for
+mechanistic interpretability? \emph{NeurIPS 2025}; arXiv:2507.08802.
+
+\bibitem{taylor2025} J.~Taylor, S.~Black, D.~Bowen, et al. Auditing games
+for sandbagging. Preprint, arXiv:2512.07810, 2025.
+
+\bibitem{teshima2020}\unv{} T.~Teshima, I.~Ishikawa, K.~Tojo, K.~Oono,
+M.~Ikeda and M.~Sugiyama. Coupling-based invertible neural networks are
+universal diffeomorphism approximators. \emph{NeurIPS 2020};
+arXiv:2006.11469.
+
+\bibitem{tice2025} C.~Tice, P.~A.~Kreer, N.~Helm-Burger, P.~S.~Shahani,
+F.~Ryzhenkov, J.~Haimes, F.~Hofst\"atter and T.~van der Weij. Noise
+injection reveals hidden capabilities of sandbagging language models.
+\emph{NeurIPS 2025}; arXiv:2412.01784.
+
+\bibitem{tracr2023}\unv{} D.~Lindner, J.~Kram\'ar, S.~Farquhar, M.~Rahtz,
+T.~McGrath and V.~Mikulik. Tracr: compiled transformers as a laboratory
+for interpretability. \emph{NeurIPS 2023}; arXiv:2301.05062.
+
+\bibitem{turner2025}\unv{} E.~Turner, A.~Soligo, et al. Model organisms
+for emergent misalignment. Preprint, arXiv:2506.11613, 2025.
+
+\bibitem{urdshals2025} E.~Urdshals, E.~Lau, J.~Hoogland, S.~van Wingerden
+and D.~Murfet. Compressibility measures complexity: minimum description
+length meets singular learning theory. Preprint, arXiv:2510.12077, 2025.
+
+\bibitem{vanderweij2024}\unv{} T.~van der Weij, F.~Hofst\"atter, et al. AI
+sandbagging: language models can strategically underperform on
+evaluations. \emph{ICLR 2025}; arXiv:2406.07358.
+
+\bibitem{vershynin2018} R.~Vershynin. \emph{High-Dimensional Probability}.
+Cambridge University Press, 2018.
+
+\bibitem{voita2020} E.~Voita and I.~Titov. Information-theoretic probing
+with minimum description length. \emph{EMNLP 2020}; arXiv:2003.12298.
+
+\bibitem{vovk2005} V.~Vovk, A.~Gammerman and G.~Shafer. \emph{Algorithmic
+Learning in a Random World}. Springer, 2005.
+
+\bibitem{wangmurfet2026} G.~Wang and D.~Murfet. Patterning: the dual of
+interpretability. \emph{ICML 2026}; arXiv:2601.13548.
+
+\bibitem{wasserman2020}\unv{} L.~Wasserman, A.~Ramdas and S.~Balakrishnan.
+Universal inference. \emph{Proceedings of the National Academy of
+Sciences} 117(29):16880--16890, 2020.
+
+\bibitem{watanabe2009} S.~Watanabe. \emph{Algebraic Geometry and
+Statistical Learning Theory}. Cambridge University Press, 2009.
+
+\bibitem{watanabe2013} S.~Watanabe. A widely applicable Bayesian information
+criterion. \emph{Journal of Machine Learning Research} 14(27):867--897,
+2013.
+
+\bibitem{watanabe2018} S.~Watanabe. \emph{Mathematical Theory of Bayesian
+Statistics}. CRC Press, 2018.
+
+\bibitem{willkn2026}\unv{} willkn. Anthropic's J-lens: a research
+engineer's analysis. LessWrong, 24 July 2026.
+
+\bibitem{wuhilton2025} G.~Wu and J.~Hilton. Estimating the probabilities
+of rare outputs in language models. \emph{ICLR 2025}; arXiv:2410.13211.
+
+\bibitem{xu2020} Y.~Xu, S.~Zhao, J.~Song, R.~Stewart and S.~Ermon. A theory
+of usable information under computational constraints. \emph{ICLR 2020};
+arXiv:2002.10689.
+
+\bibitem{zwanzig1992} R.~Zwanzig. Diffusion past an entropy barrier.
+\emph{The Journal of Physical Chemistry} 96(10):3926--3930, 1992.
+
+\end{thebibliography}
+\end{document}

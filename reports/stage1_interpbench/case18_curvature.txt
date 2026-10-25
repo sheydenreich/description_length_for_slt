@@ -1,0 +1,22 @@
+Hessian and Fisher of the subspace map's loss at its fitted point on InterpBench 18 (job 1815865, 2026-10-21;
+d_V 4, 1040 frame parameters, 16 gauge directions, 1024 targets, prior 0.01, 100 cold-start L-BFGS steps;
+dense Hessian from 1040 products; case18_curvature.json).
+
+resid_2 (valid): train NLL 0.165, mean gradient 4.5e-5. Hessian: top eigenvalue 6.1e-4 (GPT-2 layer 11:
+1.04), 19 / 269 / 335 directions above 1% / 0.1% / 0.001% of the top, and 654 NEGATIVE eigenvalues
+(expected zero set: 16 gauge directions). Fisher in the top directions 1e-5 .. 5e-3 of the Hessian.
+Predictions: Laplace Bayes 33 / 96 / 129 at n = 1024 / 8192 / 32768 (resolved 15 / 263 / 278 directions);
+plug-in (1/2) tr(F H^-1) ~ 0.
+resid_1 (misspecified): the cold-start fit did not converge (train NLL 1.28 against 0.13 in the Stage 1
+runs, mean gradient 3.0), so its spectrum (top 7.6e4, 516 negative) is not at a stationary point and is
+not used.
+
+Reading. On InterpBench the fitted point of the valid alignment is not a minimum in the sense the
+curvature analysis needs: the loss is flat to 1e-4 and indefinite in 654 of 1024 directions, i.e. the
+saturated-readout plateau found by the sampler traces (case18_llc.txt). Neither the Laplace count nor
+the plug-in trace predicts the measured 8-45 per ln n, and that is the finding: on this testbed the
+code's coefficient is not a local quantity at the fitted point but is paid at the boundary targets that
+later blocks reveal. GPT-2 (curvature_gpt2.txt) is the opposite case, a regular point with a nearly flat
+positive spectrum, where the plug-in trace predicts the coefficient within a factor 1.5. The two together
+bound what a local, SLT-style analysis of an alignment map can deliver: it works where the readout is
+unsaturated and the fit is a genuine optimum, and the prequential code remains the primary measurement.
