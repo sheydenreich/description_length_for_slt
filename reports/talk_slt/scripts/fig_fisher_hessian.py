@@ -12,8 +12,7 @@ import matplotlib.pyplot as plt
 from common import style, save, load_json, gpt2_map_slopes, PLUGIN, BAYES, MUTED, INK, INK2
 
 
-def main():
-    style()
+def panels(axes):
     d = load_json("stage1_ioi/curvature_gpt2_layer11_full_heldout_fisher.json")["layer11"]
     h = np.array(d["hessian_eigenvalues"])
     F = np.array(d["fisher_in_hessian_directions"])
@@ -23,7 +22,6 @@ def main():
     h, F = h[order], F[order]
     rank = np.arange(1, len(h) + 1)
 
-    fig, axes = plt.subplots(1, 2, figsize=(16, 6.2), gridspec_kw={"wspace": 0.28})
     ax = axes[0]
     ax.scatter(rank, np.clip(F, 1e-9, None), s=4, color=PLUGIN, alpha=0.35, lw=0, label="Fisher F_ii (held-out)")
     ax.plot(rank, h, color=INK, lw=2.5, label="Hessian eigenvalue h_i")
@@ -56,6 +54,12 @@ def main():
                 xytext=(rank[-1] * 0.04, plug[-1] * 0.03), fontsize=16, color=PLUGIN,
                 arrowprops=dict(arrowstyle="-", color=PLUGIN))
     ax.legend(loc="lower right")
+
+
+def main():
+    style()
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6.2), gridspec_kw={"wspace": 0.28})
+    panels(axes)
     save(fig, "gpt2_fisher_vs_hessian_slide")
 
 

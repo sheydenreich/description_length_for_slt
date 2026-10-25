@@ -8,7 +8,8 @@ subspace over a control?
 
 Figure 1 (gain_decomposition): the split against the manufactured alignment and the coupling map on the
 trained network, with the readout as is (top) and with one learned inverse temperature on every predictor's
-logits (bottom, --temperature; against label-only the gain is all fit term in both). Figure 2
+logits (bottom, --temperature; against label-only the gain is all fit term in both); gain_decomposition_as_is
+is its top row alone. Figure 2
 (code_rate_per_block): the per-target code rate in each doubling block minus the channel floor, the same
 comparison without the final fits (each block is coded before it is fitted). Figure 3
 (gain_coupling_pair): the same split between the two coupling maps, on the trained network (layer 11) and on
@@ -48,8 +49,9 @@ def band(ax, n, arr, color, **kw):
     return m
 
 
-def decomposition(runs):
-    fig, axes = plt.subplots(2, 2, figsize=(14, 9.4), sharex=True)
+def decomposition(runs, name="gain_decomposition"):
+    rows = len(runs)
+    fig, axes = plt.subplots(rows, 2, figsize=(14, 4.7 * rows), sharex=True, squeeze=False)
     ends = {}
     for row, (d, row_title) in zip(axes, runs):
         n = np.array(d["block_ends"])
@@ -68,12 +70,12 @@ def decomposition(runs):
             ax.set_xlim(12, 32768 * 2.6)
             ends[ax] = (n[-1], [tot[-1], reg[-1], fit[-1]])
         row[0].set_ylabel("thousands of bits")
-    for ax in axes[1]:
+    for ax in axes[-1]:
         ax.set_xlabel("targets n")
     for col in range(2):  # same y-range within a column, so the rows compare directly
-        lo = min(axes[r][col].get_ylim()[0] for r in range(2))
-        hi = max(axes[r][col].get_ylim()[1] for r in range(2))
-        for r in range(2):
+        lo = min(axes[r][col].get_ylim()[0] for r in range(rows))
+        hi = max(axes[r][col].get_ylim()[1] for r in range(rows))
+        for r in range(rows):
             axes[r][col].set_ylim(lo, hi)
     for ax, (x, values) in ends.items():  # end labels after the shared y-range is set
         placed = []
@@ -84,9 +86,9 @@ def decomposition(runs):
                 ax.annotate(txt, (x, v), xytext=(6, 0), textcoords="offset points", va="center",
                             color=INK2, fontsize=13)
     handles, labels = axes[0][0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.04), fontsize=15)
+    fig.legend(handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.08 / rows), fontsize=15)
     fig.tight_layout()
-    save(fig, "gain_decomposition")
+    save(fig, name)
 
 
 def pair_split(d, hyp, ctrl):
@@ -153,6 +155,7 @@ def main():
     style()
     d = load_json(SRC)
     decomposition([(d, ROWS[0][1]), (load_json(SRC_TEMP), ROWS[1][1])])
+    decomposition([(d, ROWS[0][1])], "gain_decomposition_as_is")  # top row alone, for the 7-minute deck
     rates(d)
     coupling_pair([(d, ROWS[0][1]), (load_json(SRC_TEMP), ROWS[1][1])])
 

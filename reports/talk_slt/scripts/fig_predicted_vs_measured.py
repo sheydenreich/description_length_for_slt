@@ -53,12 +53,12 @@ def gpt2():
     ]
 
 
-def main():
-    style()
-    fig, ax = plt.subplots(figsize=(11, 6.4))
+def panel(ax, compact=False):
+    """compact: one label for the GPT-2 cluster and the legend at upper left (slide composite)."""
     lim = (0.3, 6e4)
     ax.plot(lim, lim, color=MUTED, lw=1.2)
-    ax.text(1.6, 0.72, "measured = predicted", color=INK2, fontsize=13)
+    if not compact:
+        ax.text(1.6, 0.72, "measured = predicted", color=INK2, fontsize=13)
 
     pred, meas = oracle()
     for i, k in enumerate(sorted(pred)):
@@ -67,7 +67,10 @@ def main():
         ax.plot(nom, y, "o", mfc="white", mec=MUTED, mew=1.5, ms=8, zorder=2)
         ax.errorbar(pred[k], y, yerr=e, fmt="o", color=PLUGIN, capsize=3, ms=9, zorder=3,
                     label="plug-in prediction ½ tr(F H⁻¹)" if i == 0 else None)
-    ax.text(0.7, 7.5, "oracle, k = 1 … 11 readable\ndirections (d = 12, n ≤ 16384)", fontsize=13, color=INK2)
+    if compact:
+        ax.text(1.5, 0.6, "oracle, k = 1 … 11", fontsize=13, color=INK2, va="center")
+    else:
+        ax.text(0.7, 7.5, "oracle, k = 1 … 11 readable\ndirections (d = 12, n ≤ 16384)", fontsize=13, color=INK2)
 
     rows = gpt2()
     # label positions (data coordinates) with leader lines, so the five clustered GPT-2 points stay legible
@@ -78,8 +81,11 @@ def main():
         ax.plot(nom, m[0], "D", mfc="white", mec=MUTED, mew=1.5, ms=9, zorder=2,
                 label="Bayes λ at the same measured κ" if i == 0 else None)
         ax.errorbar(p, m[0], yerr=m[1], fmt="D", color=PLUGIN, capsize=3, ms=10, zorder=3)
-        ax.annotate("GPT-2 " + label, (p, m[0]), xytext=at[label], fontsize=12, color=INK, ha="center",
-                    va="center", arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8, shrinkB=6))
+        if not compact:
+            ax.annotate("GPT-2 " + label, (p, m[0]), xytext=at[label], fontsize=12, color=INK, ha="center",
+                        va="center", arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8, shrinkB=6))
+    if compact:
+        ax.text(2.2, 65, "GPT-2, layers 10–12,\nd_V 4–64", fontsize=13, color=INK, ha="center", va="center")
     _, p16, m16, n16 = rows[1]
     ax.annotate("", xy=(n16, m16[0] * 0.62), xytext=(p16, m16[0] * 0.62),
                 arrowprops=dict(arrowstyle="<->", color=INK2, lw=1.5))
@@ -92,7 +98,13 @@ def main():
     ax.set_ylim(lim[0], 400)
     ax.set_xlabel("predicted coefficient per ln n")
     ax.set_ylabel("measured κ (MAP code)")
-    ax.legend(loc="lower right")
+    ax.legend(loc="upper left" if compact else "lower right")
+
+
+def main():
+    style()
+    fig, ax = plt.subplots(figsize=(11, 6.4))
+    panel(ax)
     save(fig, "predicted_vs_measured")
 
 
